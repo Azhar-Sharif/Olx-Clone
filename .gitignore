@@ -6,3 +6,7 @@ staticfiles/
 media/
 .vscode/
 .idea/
+.coverage
+htmlcov/
+.pytest_cache/
+.cache/
