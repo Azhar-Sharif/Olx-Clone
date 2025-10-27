@@ -6,13 +6,11 @@ from .manager import UserManager
 
 class User(AbstractUser):
     ROLE_Choices = (
-        ("user", "User"),
-        ("admin", "Admin"),
+        ("USER", "User"),
+        ("ADMIN", "Admin"),
     )
 
-    role = models.CharField(
-        max_length=10, choices=ROLE_Choices, default="user"
-    )
+    role = models.CharField(choices=ROLE_Choices, default="USER")
     phone_no = models.CharField(max_length=15, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
 
