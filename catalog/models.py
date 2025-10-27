@@ -3,7 +3,7 @@ from django.db import models
 
 
 class Category(models.Model):
-    category_name = models.charfield(max_length=120, unique=True)
+    category_name = models.CharField(max_length=120, unique=True)
 
     class Meta:
         ordering = ["category_name"]
@@ -16,7 +16,9 @@ class Product(models.Model):
     product_name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    product_img = models.ImageField(uploads_to="products/", blank=True)
+    product_img = models.ImageField(
+        upload_to="products/", blank=True, null=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     user = models.ForeignKey(
