@@ -1,7 +1,6 @@
 from decimal import Decimal
 
 from django.conf import settings
-from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q
 
@@ -57,27 +56,3 @@ class Order(models.Model):
         if save:
             self.save(update_fields=["total_amount"])
         return total
-
-
-class OrderItem(models.Model):
-    order = models.ForeignKey(
-        "orders.Order", on_delete=models.CASCADE, related_name="items"
-    )
-    product = models.ForeignKey(
-        "catalog.Product", on_delete=models.PROTECT, related_name="order_items"
-    )
-    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-
-    # Unit price at the time the item is added
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["order", "product"], name="uniq_order_product"
-            )
-        ]
-        ordering = ["order_id", "product_id"]
-
-    def __str__(self):
-        return f"{self.product_id} x {self.quantity} (₹{self.unit_price}) for order {self.order_id}"
