@@ -42,10 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "user",
-    "category",
-    "products",
-    "orders",
-    "order_items",
+    "catalog",
     "cloudinary",
     "cloudinary_storage",
 ]
