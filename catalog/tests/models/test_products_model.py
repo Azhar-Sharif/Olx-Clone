@@ -45,7 +45,6 @@ class TestProductModel:
         )
 
         assert product.user == user
-        # Deleting the user should set product.user to NULL because on_delete=SET_NULL in product model
         user.delete()
         product.refresh_from_db()
         assert product.user is None
@@ -86,7 +85,6 @@ class TestProductModel:
     def test_ordering_by_created_at_desc(self):
         """Default ordering should return newest first (-created_at)"""
         category = Category.objects.create(category_name="Office")
-        # Create sequentially to ensure different created_at values
         p1 = Product.objects.create(
             product_name="Pen",
             price=Decimal("1.00"),
@@ -120,5 +118,4 @@ class TestProductModel:
             price=Decimal("10.00"),
             category=category,
         )
-        # DecimalField preserves exact value/scale
         assert product.price == Decimal("10.00")
