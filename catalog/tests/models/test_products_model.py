@@ -1,0 +1,124 @@
+import time
+from decimal import Decimal
+
+import pytest
+from django.db.models.deletion import ProtectedError
+
+from catalog.models.category import Category
+from catalog.models.products import Product
+from user.models import User
+
+
+@pytest.mark.django_db
+class TestProductModel:
+
+    def test_create_product_minimal(self):
+        """Can create with only required fields (user & image optional)"""
+        category = Category.objects.create(category_name="Electronics")
+
+        product = Product.objects.create(
+            product_name="Phone",
+            price=Decimal("499.99"),
+            category=category,
+        )
+
+        assert product.id is not None
+        assert product.product_name == "Phone"
+        assert product.description == ""
+        assert product.price == Decimal("499.99")
+        assert not product.product_img
+        assert product.user is None
+        assert product.category == category
+        assert str(product) == "Phone"
+
+    def test_create_product_with_user(self):
+
+        category = Category.objects.create(category_name="Books")
+        user = User.objects.create_user(username="alice", password="pass")
+
+        product = Product.objects.create(
+            product_name="Novel",
+            price=Decimal("19.99"),
+            category=category,
+            user=user,
+            description="A great read",
+        )
+
+        assert product.user == user
+        # Deleting the user should set product.user to NULL because on_delete=SET_NULL in product model
+        user.delete()
+        product.refresh_from_db()
+        assert product.user is None
+
+    def test_category_delete_is_protected(self):
+        """Category is protected; cannot delete while products exist"""
+        category = Category.objects.create(category_name="Gadgets")
+        Product.objects.create(
+            product_name="Smartwatch",
+            price=Decimal("149.00"),
+            category=category,
+        )
+
+        with pytest.raises(ProtectedError):
+            category.delete()
+
+    def test_related_names(self):
+        """Reverse relations via related_name should work"""
+        category = Category.objects.create(category_name="Home")
+        user = User.objects.create_user(username="bob", password="pass")
+
+        Product.objects.create(
+            product_name="Vacuum",
+            price=Decimal("89.50"),
+            category=category,
+            user=user,
+        )
+        Product.objects.create(
+            product_name="Mop",
+            price=Decimal("12.00"),
+            category=category,
+            user=user,
+        )
+
+        assert user.products.count() == 2
+        assert category.products.count() == 2
+
+    def test_ordering_by_created_at_desc(self):
+        """Default ordering should return newest first (-created_at)"""
+        category = Category.objects.create(category_name="Office")
+        # Create sequentially to ensure different created_at values
+        p1 = Product.objects.create(
+            product_name="Pen",
+            price=Decimal("1.00"),
+            category=category,
+        )
+        time.sleep(0.01)
+        p2 = Product.objects.create(
+            product_name="Notebook",
+            price=Decimal("2.50"),
+            category=category,
+        )
+        time.sleep(0.01)
+        p3 = Product.objects.create(
+            product_name="Stapler",
+            price=Decimal("5.75"),
+            category=category,
+        )
+
+        products = list(Product.objects.all())
+        assert [p.product_name for p in products] == [
+            p3.product_name,
+            p2.product_name,
+            p1.product_name,
+        ]
+
+    def test_price_precision(self):
+        """Price should store decimal with 2 places"""
+        category = Category.objects.create(category_name="Toys")
+        product = Product.objects.create(
+            product_name="Puzzle",
+            price=Decimal("10.00"),
+            category=category,
+        )
+        # DecimalField preserves exact value/scale
+        assert product.price == Decimal("10.00")
