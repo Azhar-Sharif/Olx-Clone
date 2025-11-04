@@ -1,8 +1,8 @@
-import time
 from decimal import Decimal
 
 import pytest
 from django.db.models.deletion import ProtectedError
+from freezegun import freeze_time
 
 from catalog.models.category import Category
 from catalog.models.products import Product
@@ -85,29 +85,31 @@ class TestProductModel:
     def test_ordering_by_created_at_desc(self):
         """Default ordering should return newest first (-created_at)"""
         category = Category.objects.create(category_name="Office")
-        p1 = Product.objects.create(
-            product_name="Pen",
-            price=Decimal("1.00"),
-            category=category,
-        )
-        time.sleep(0.01)
-        p2 = Product.objects.create(
-            product_name="Notebook",
-            price=Decimal("2.50"),
-            category=category,
-        )
-        time.sleep(0.01)
-        p3 = Product.objects.create(
-            product_name="Stapler",
-            price=Decimal("5.75"),
-            category=category,
-        )
+
+        with freeze_time("2025-01-01 10:00:00"):
+            Product.objects.create(
+                product_name="Pen", price=Decimal("1.00"), category=category
+            )
+
+        with freeze_time("2025-01-01 10:00:01"):
+            Product.objects.create(
+                product_name="Notebook",
+                price=Decimal("2.50"),
+                category=category,
+            )
+
+        with freeze_time("2025-01-01 10:00:02"):
+            Product.objects.create(
+                product_name="Stapler",
+                price=Decimal("5.75"),
+                category=category,
+            )
 
         products = list(Product.objects.all())
         assert [p.product_name for p in products] == [
-            p3.product_name,
-            p2.product_name,
-            p1.product_name,
+            "Stapler",
+            "Notebook",
+            "Pen",
         ]
 
     def test_price_precision(self):
