@@ -1,4 +1,5 @@
 import pytest
+from django.db import IntegrityError
 
 from catalog.models.category import Category
 
@@ -17,7 +18,7 @@ class TestCategoryModel:
         """category_name must be unique"""
         Category.objects.create(category_name="Books")
 
-        with pytest.raises(Exception):
+        with pytest.raises(IntegrityError):
             Category.objects.create(category_name="Books")
 
     def test_ordering(self):
