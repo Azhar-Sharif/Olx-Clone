@@ -1,70 +1,93 @@
 from decimal import Decimal
 
 import pytest
-from django.contrib.auth import get_user_model
+from faker import Faker
 
 from catalog.models.orders import Order
+from catalog.tests.factories.orders_factory import OrderFactory
 
-User = get_user_model()
+faker = Faker()
 
 
 @pytest.mark.django_db
 class TestOrderModel:
-    @pytest.fixture
-    def user(self):
-        return User.objects.create_user(
-            username="testuser",
-            email="test@example.com",
-            password="password123",
-        )
+    def test_create_order_defaults(self):
+        order = OrderFactory()
 
-    def test_create_order_defaults(self, user):
-        """Ensure an order is created with correct default values."""
-        order = Order.objects.create(user=user)
-
-        assert order.user == user
+        assert order.user is not None
         assert order.total_amount == Decimal("0.00")
         assert order.order_status == Order.Status.PENDING
         assert order.products == []
         assert order.order_date is not None
 
-    def test_add_product_new_item(self, user):
-        """Adding a new product should add it to products list."""
-        order = Order.objects.create(user=user)
+    def test_add_product_new_item(self):
+        order = OrderFactory()
+        product_id = faker.pyint(min_value=1, max_value=10_000)
+        quantity = faker.pyint(min_value=1, max_value=10)
+        unit_price = Decimal(
+            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True))
+        )
 
         order.add_product(
-            product_id=1, quantity=2, unit_price=Decimal("50.00")
+            product_id=product_id, quantity=quantity, unit_price=unit_price
         )
 
         assert len(order.products) == 1
-        assert order.products[0]["product_id"] == 1
-        assert order.products[0]["quantity"] == 2
-        assert order.total_amount == Decimal("100.00")
+        item = order.products[0]
+        assert item["product_id"] == product_id
+        assert item["quantity"] == quantity
+        expected_total = unit_price * quantity
+        assert order.total_amount == expected_total
 
-    def test_add_product_existing_item_updates_quantity(self, user):
-        """Adding an existing product should increase its quantity."""
-        order = Order.objects.create(user=user)
+    def test_add_product_existing_item_updates_quantity(self):
+        order = OrderFactory()
+
+        product_id = faker.pyint(min_value=1, max_value=10_000)
+        q1 = faker.pyint(min_value=1, max_value=5)
+        q2 = faker.pyint(min_value=1, max_value=5)
+        unit_price = Decimal(
+            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True))
+        )
 
         order.add_product(
-            product_id=1, quantity=2, unit_price=Decimal("30.00")
+            product_id=product_id, quantity=q1, unit_price=unit_price
         )
         order.add_product(
-            product_id=1, quantity=3, unit_price=Decimal("30.00")
+            product_id=product_id, quantity=q2, unit_price=unit_price
         )
 
         assert len(order.products) == 1
-        assert order.products[0]["quantity"] == 5
-        assert order.total_amount == Decimal("150.00")
+        item = order.products[0]
+        assert item["product_id"] == product_id
+        assert item["quantity"] == q1 + q2
+        assert order.total_amount == unit_price * (q1 + q2)
 
-    def test_recompute_total_manual(self, user):
-        """Ensure recompute_total calculates sum correctly."""
-        order = Order.objects.create(user=user)
+    def test_recompute_total_manual(self):
+        order = OrderFactory()
+
+        p1_price = Decimal(
+            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True))
+        )
+        p2_price = Decimal(
+            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True))
+        )
+        p1_qty = faker.pyint(min_value=1, max_value=5)
+        p2_qty = faker.pyint(min_value=1, max_value=5)
+
         order.products = [
-            {"product_id": 1, "quantity": 2, "unit_price": "40.00"},
-            {"product_id": 2, "quantity": 3, "unit_price": "10.00"},
+            {
+                "product_id": faker.pyint(min_value=1, max_value=10_000),
+                "quantity": p1_qty,
+                "unit_price": str(p1_price),
+            },
+            {
+                "product_id": faker.pyint(min_value=1, max_value=10_000),
+                "quantity": p2_qty,
+                "unit_price": str(p2_price),
+            },
         ]
 
         total = order.recompute_total()
-
-        assert total == Decimal("110.00")
-        assert order.total_amount == Decimal("110.00")
+        expected = p1_price * p1_qty + p2_price * p2_qty
+        assert total == expected
+        assert order.total_amount == expected
