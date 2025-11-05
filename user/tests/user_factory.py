@@ -1,0 +1,21 @@
+import factory
+
+from user.models import User
+
+
+class UserFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = User
+
+    username = factory.Faker("user_name")
+    email = factory.Faker("email")
+    password = factory.PostGenerationMethodCall(
+        "set_password", "defaultpassword123"
+    )
+    role = "USER"
+
+
+class AdminUserFactory(UserFactory):
+    role = "ADMIN"
+    is_staff = True
+    is_superuser = True
