@@ -1,0 +1,1 @@
+from catalog.permissions.products_permissions import IsOwnerOrReadOnly
