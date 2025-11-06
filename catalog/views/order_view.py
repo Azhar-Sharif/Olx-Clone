@@ -1,9 +1,8 @@
 from rest_framework import permissions, viewsets
 
 from catalog.models import Order
-
-from .permissions import IsOwnerOnly
-from .serializers import OrderSerializer
+from catalog.permissions import IsOwnerOnly
+from catalog.serializers import OrderSerializer
 
 
 class OrderViewSet(viewsets.ModelViewSet):
