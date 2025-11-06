@@ -1,1 +1,3 @@
 from catalog.serializers.serializers_category import CategorySerializer
+from catalog.serializers.serializers_order import OrderSerializer
+from catalog.serializers.serializers_product import ProductSerializer

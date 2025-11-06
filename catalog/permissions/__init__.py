@@ -1,1 +1,2 @@
+from catalog.permissions.orders_permission import IsOwnerOnly
 from catalog.permissions.products_permissions import IsOwnerOrReadOnly
