@@ -7,7 +7,7 @@ from freezegun import freeze_time
 from catalog.models.products import Product
 from catalog.tests.factories.category_factory import CategoryFactory
 from catalog.tests.factories.products_factory import ProductFactory
-from user.tests.user_factory import UserFactory
+from users.tests.user_factory import UserFactory
 
 
 @pytest.mark.django_db
