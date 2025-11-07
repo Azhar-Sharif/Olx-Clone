@@ -3,8 +3,8 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from user.models import User
-from user.serializers import LoginSerializer, UserSerializer
+from users.models import User
+from users.serializers import LoginSerializer, UserSerializer
 
 
 class UserCreateView(generics.CreateAPIView):
