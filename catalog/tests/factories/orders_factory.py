@@ -4,7 +4,7 @@ import factory
 from factory import LazyFunction, SubFactory
 
 from catalog.models.orders import Order
-from user.tests.user_factory import UserFactory
+from users.tests.user_factory import UserFactory
 
 
 class OrderFactory(factory.django.DjangoModelFactory):
