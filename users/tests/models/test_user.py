@@ -1,7 +1,7 @@
 import pytest
 
-from user.models import User
-from user.tests.user_factory import AdminUserFactory, UserFactory
+from users.models import User
+from users.tests.user_factory import AdminUserFactory, UserFactory
 
 
 @pytest.mark.django_db
