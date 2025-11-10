@@ -3,7 +3,6 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from catalog.models import Category, Product
-from catalog.serializers import CategorySerializer
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -12,9 +11,11 @@ class ProductSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all()
     )
 
-    category_detail = CategorySerializer(source="category", read_only=True)
+    category_name = serializers.ReadOnlyField(source="category.category_name")
 
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    user_name = serializers.ReadOnlyField(source="user.username")
 
     product_img = serializers.ImageField(required=False, allow_null=True)
 
@@ -31,8 +32,9 @@ class ProductSerializer(serializers.ModelSerializer):
             "product_img_url",
             "created_at",
             "user",
+            "user_name",
             "category",
-            "category_detail",
+            "category_name",
         ]
         read_only_fields = ["id", "created_at"]
 
