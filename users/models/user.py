@@ -5,6 +5,7 @@ from users.manager import UserManager
 
 
 class User(AbstractUser):
+    # [fixme] put me somewhere in utils/constants.py
     ROLE_Choices = (
         ("USER", "User"),
         ("ADMIN", "Admin"),
