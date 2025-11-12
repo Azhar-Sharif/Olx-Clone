@@ -3,7 +3,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 
 from catalog.models.products import Product
 from catalog.permissions import IsOwnerOrReadOnly
-from catalog.serializers.serializers_product import ProductSerializer
+from catalog.serializers.product import ProductSerializer
 
 
 class ProductViewSet(viewsets.ModelViewSet):

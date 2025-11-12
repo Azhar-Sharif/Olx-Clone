@@ -5,8 +5,8 @@ from django.db.models.deletion import ProtectedError
 from freezegun import freeze_time
 
 from catalog.models.products import Product
-from catalog.tests.factories.category_factory import CategoryFactory
-from catalog.tests.factories.products_factory import ProductFactory
+from catalog.tests.factories.category import CategoryFactory
+from catalog.tests.factories.products import ProductFactory
 from users.tests.user_factory import UserFactory
 
 

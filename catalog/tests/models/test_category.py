@@ -2,7 +2,7 @@ import pytest
 from django.db import IntegrityError
 
 from catalog.models.category import Category
-from catalog.tests.factories.category_factory import CategoryFactory
+from catalog.tests.factories.category import CategoryFactory
 
 
 @pytest.mark.django_db

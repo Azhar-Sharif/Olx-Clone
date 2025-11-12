@@ -4,7 +4,7 @@ import factory
 from factory import SubFactory
 
 from catalog.models.products import Product
-from catalog.tests.factories.category_factory import CategoryFactory
+from catalog.tests.factories.category import CategoryFactory
 
 
 class ProductFactory(factory.django.DjangoModelFactory):
