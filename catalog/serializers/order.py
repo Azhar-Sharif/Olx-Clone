@@ -3,12 +3,17 @@ from rest_framework import serializers
 from catalog.models import Order, Product
 
 
+class OrderProductInputSerializer(serializers.Serializer):
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all()
+    )
+    quantity = serializers.IntegerField(min_value=1)
+
+
 class OrderSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.username")
     products = serializers.JSONField(read_only=True)
-    products_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all(), many=True, write_only=True
-    )
+    products_data = OrderProductInputSerializer(many=True, write_only=True)
 
     class Meta:
         model = Order
@@ -17,7 +22,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "user",
             "order_date",
             "products",
-            "products_ids",
+            "products_data",
             "total_amount",
             "shipping_address",
             "order_status",
@@ -32,24 +37,26 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        product_ids = validated_data.pop("products_ids")
+        products_data = validated_data.pop("products_data")
         user = self.context["request"].user
 
-        products = Product.objects.filter(id__in=[p.id for p in product_ids])
-        products_list = [
-            {
-                "product_id": p.id,
-                "product_name": p.product_name,
-                "quantity": 1,
-                "unit_price": str(p.price),
-            }
-            for p in products
-        ]
+        products_list = []
+        for item in products_data:
+            product = item["product_id"]
+            quantity = item["quantity"]
+            products_list.append(
+                {
+                    "product_id": product.id,
+                    "product_name": product.product_name,
+                    "quantity": quantity,
+                    "unit_price": str(product.price),
+                }
+            )
 
         order = Order.objects.create(
             user=user,
             products=products_list,
-            shipping_address=validated_data.get("shipping_address"),
+            shipping_address=validated_data["shipping_address"],
         )
         order.recompute_total()
         return order
