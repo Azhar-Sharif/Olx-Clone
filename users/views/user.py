@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import authenticate, login, logout
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -5,6 +7,8 @@ from rest_framework.views import APIView
 
 from users.models import User
 from users.serializers import LoginSerializer, UserSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class UserCreateView(generics.CreateAPIView):
@@ -31,6 +35,7 @@ class LoginView(APIView):
     serializer_class = LoginSerializer
 
     def post(self, request):
+        client_ip = request.META.get("REMOTE_ADDR", "Unknown")
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data["username"]
@@ -47,11 +52,16 @@ class LoginView(APIView):
                     },
                     status=status.HTTP_200_OK,
                 )
+            logger.warning(
+                f"Failed login attempt: {username} from IP: {client_ip} - Invalid credentials"
+            )
             return Response(
                 {"error": "Invalid credentials"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
-
+        logger.warning(
+            f"Invalid login data from IP: {client_ip} - {serializer.errors}"
+        )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
