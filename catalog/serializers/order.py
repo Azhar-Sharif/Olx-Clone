@@ -1,3 +1,5 @@
+from django.db import transaction
+from django.db.models import F
 from rest_framework import serializers
 
 from catalog.models import Order, Product
@@ -41,22 +43,37 @@ class OrderSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
 
         products_list = []
-        for item in products_data:
-            product = item["product_id"]
-            quantity = item["quantity"]
-            products_list.append(
-                {
-                    "product_id": product.id,
-                    "product_name": product.product_name,
-                    "quantity": quantity,
-                    "unit_price": str(product.price),
-                }
-            )
 
-        order = Order.objects.create(
-            user=user,
-            products=products_list,
-            shipping_address=validated_data["shipping_address"],
-        )
-        order.recompute_total()
+        with transaction.atomic():
+            for item in products_data:
+                product = item["product_id"]
+                quantity = item["quantity"]
+
+                if product.quantity < quantity:
+                    raise serializers.ValidationError(
+                        {
+                            f"Inventory check failed: The quantity requested for product {product.id} is not available."
+                        }
+                    )
+
+                products_list.append(
+                    {
+                        "product_id": product.id,
+                        "product_name": product.product_name,
+                        "quantity": quantity,
+                        "unit_price": str(product.price),
+                    }
+                )
+
+                Product.objects.filter(pk=product.pk).update(
+                    quantity=F("quantity") - quantity
+                )
+
+            order = Order.objects.create(
+                user=user,
+                products=products_list,
+                shipping_address=validated_data["shipping_address"],
+            )
+            order.recompute_total()
+
         return order
