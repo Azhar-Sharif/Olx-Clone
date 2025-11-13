@@ -6,7 +6,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from users.models import User
-from users.serializers import LoginSerializer, UserSerializer
+from users.serializers import (
+    LoginSerializer,
+    UserProfileUpdateSerializer,
+    UserSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +28,7 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
     Authenticated user can view, update, or delete their own profile
     """
 
-    serializer_class = UserSerializer
+    serializer_class = UserProfileUpdateSerializer
 
     def get_object(self):
         return self.request.user
