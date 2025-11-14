@@ -158,41 +158,49 @@ LOGGING = {
         },
     },
     "handlers": {
-        "file": {
+        "app_info": {
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": os.path.join(LOG_DIR, "app.log"),
+            "filename": os.path.join(LOG_DIR, "app_info.log"),
             "maxBytes": 5 * 1024 * 1024,
             "backupCount": 5,
             "formatter": "verbose",
             "level": "INFO",
         },
-        "error_file": {
+        "app_error": {
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": os.path.join(LOG_DIR, "errors.log"),
+            "filename": os.path.join(LOG_DIR, "app_error.log"),
             "maxBytes": 5 * 1024 * 1024,
             "backupCount": 3,
             "formatter": "verbose",
             "level": "ERROR",
         },
+        "app_debug": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOG_DIR, "app_debug.log"),
+            "maxBytes": 5 * 1024 * 1024,
+            "backupCount": 5,
+            "formatter": "verbose",
+            "level": "DEBUG",
+        },
     },
     "loggers": {
         "django": {
-            "handlers": ["file"],
+            "handlers": ["app_info"],
             "level": "INFO",
             "propagate": True,
         },
         "django.request": {
-            "handlers": ["error_file"],
+            "handlers": ["app_error"],
             "level": "ERROR",
             "propagate": False,
         },
-        "users": {
-            "handlers": ["file", "error_file"],
-            "level": "DEBUG",
+        "project": {
+            "handlers": ["app_info", "app_error"],
+            "level": "INFO",
             "propagate": False,
         },
-        "catalog": {
-            "handlers": ["file", "error_file"],
+        "api": {
+            "handlers": ["app_debug", "app_info", "app_error"],
             "level": "DEBUG",
             "propagate": False,
         },

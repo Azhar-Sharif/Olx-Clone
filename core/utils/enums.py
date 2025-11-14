@@ -21,8 +21,6 @@ class SuccessMessages(Enum):
     USER_PROFILE_DELETED = "User profile deleted successfully."
     USER_LOGGED_IN = "Login successful."
     USER_LOGGED_OUT = "Logged out successfully."
-    USER_NAME_EMPTY = "Username cannot be empty."
-    USERNAME_TAKEN = "Choose another Username."
 
 
 class ErrorMessages(Enum):
@@ -43,3 +41,5 @@ class ErrorMessages(Enum):
     USER_NOT_FOUND = "Requested user not found."
     INVALID_CREDENTIALS = "Invalid username or password."
     AUTH_REQUIRED = "Authentication required."
+    USER_NAME_EMPTY = "Username cannot be empty."
+    USERNAME_TAKEN = "Choose another Username."
