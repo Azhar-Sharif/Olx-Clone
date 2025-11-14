@@ -3,6 +3,8 @@ from rest_framework import permissions, viewsets
 from catalog.models import Order
 from catalog.permissions import IsOwnerOnly
 from catalog.serializers import OrderSerializer
+from core.utils.enums import SuccessMessages
+from core.utils.response import api_response
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -15,7 +17,12 @@ class OrderViewSet(viewsets.ModelViewSet):
             "-order_date"
         )
 
-    def perform_create(self, serializer):
-        order = serializer.save()
-        order.recompute_total()
-        return order
+    def create(self, request, *args, **kwargs):
+        """Override create to return unified response structure."""
+        response = super().create(request, *args, **kwargs)
+        return api_response(
+            True,
+            message=SuccessMessages.ORDER_PLACED.value,
+            data=response.data,
+            status_code=response.status_code,
+        )
