@@ -22,7 +22,6 @@ class Order(models.Model):
     order_date = models.DateTimeField(auto_now_add=True)
 
     # store all products here as JSON
-    # [fixme] Make me a custom field
     products = models.JSONField(default=list)
 
     total_amount = models.DecimalField(
