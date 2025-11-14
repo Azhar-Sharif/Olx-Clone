@@ -1,1 +1,1 @@
-from users.urls.urls_user import urlpatterns
+from users.urls.user import urlpatterns

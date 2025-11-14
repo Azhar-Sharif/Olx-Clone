@@ -10,3 +10,8 @@ media/
 htmlcov/
 .pytest_cache/
 .cache/
+
+# Log files
+logs/
+*.log
+*.log.*

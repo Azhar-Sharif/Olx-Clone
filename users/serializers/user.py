@@ -49,8 +49,44 @@ class UserSerializer(serializers.ModelSerializer):
             "address",
             "password",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "role"]
 
     def create(self, validated_data):
         """Create a new user with encrypted password"""
         return User.objects.create_user(**validated_data)
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        write_only=True,
+        required=False,
+        min_length=8,
+        style={"input_type": "password"},
+        help_text="Password must be at least 8 characters long",
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "role",
+            "phone_no",
+            "address",
+            "password",
+        ]
+        read_only_fields = ["id", "username", "role"]
+
+    def update(self, instance, validated_data):
+        """Update user, properly hashing the password if it's provided."""
+        password = validated_data.pop("password", None)
+        user = super().update(instance, validated_data)
+
+        if password:
+            user.set_password(password)
+            user.save()
+
+        return user

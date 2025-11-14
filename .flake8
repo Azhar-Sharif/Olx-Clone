@@ -1,8 +1,8 @@
 [flake8]
-# Ignore long line errors and other common issues
+
 ignore = E501, W503, E203
 
-# Exclude common folders that don't need linting
+
 exclude =
     .git,
     .github,
@@ -17,17 +17,17 @@ exclude =
     .pytest_cache,
     *.egg-info
 
-# Only check Python files
+
 filename = *.py
 
-# Show source code with each error
+
 show-source = true
 
-# Max complexity (Cyclomatic complexity)
+
 max-complexity = 10
 
-# Enable detailed output
+
 statistics = true
 
-# Maximum line length (consistent with black)
+
 max-line-length = 79

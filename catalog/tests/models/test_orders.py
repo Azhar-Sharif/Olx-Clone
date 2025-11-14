@@ -4,7 +4,7 @@ import pytest
 from faker import Faker
 
 from catalog.models.orders import Order
-from catalog.tests.factories.orders_factory import OrderFactory
+from catalog.tests.factories.orders import OrderFactory
 
 faker = Faker()
 

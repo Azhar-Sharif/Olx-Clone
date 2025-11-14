@@ -6,6 +6,9 @@ class Product(models.Model):
     product_name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField(
+        default=1, help_text="Available stock quantity"
+    )
     product_img = models.ImageField(
         upload_to="products/", blank=True, null=True
     )
