@@ -5,6 +5,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 
 from core.utils.enums import ErrorMessages, SuccessMessages
+from core.utils.logger import log_debug, log_error, log_info
 from core.utils.response import api_response
 from users.models import User
 from users.serializers import (
@@ -53,9 +54,15 @@ class LoginView(APIView):
         client_ip = request.META.get("REMOTE_ADDR", "Unknown")
         serializer = LoginSerializer(data=request.data)
 
+        log_info(
+            "Login attempt",
+            extra={"ip": client_ip, "username": request.data.get("username")},
+        )
+
         if not serializer.is_valid():
-            logger.warning(
-                f"Invalid login data from IP {client_ip} - {serializer.errors}"
+            log_error(
+                f"Invalid login data from IP {client_ip}",
+                extra={"errors": serializer.errors},
             )
 
             errors = serializer.errors
@@ -88,11 +95,12 @@ class LoginView(APIView):
         username = serializer.validated_data["username"]
         password = serializer.validated_data["password"]
 
+        log_debug(f"Authenticating user {username}")
+
         user = authenticate(request, username=username, password=password)
         if user is None:
-            logger.warning(
-                f"Failed login attempt for '{username}' from IP {client_ip} - Invalid credentials"
-            )
+            log_warning_msg = f"Failed login attempt for '{username}' from IP {client_ip} - Invalid credentials"
+            log_error(log_warning_msg)
             return api_response(
                 success=False,
                 message=ErrorMessages.INVALID_CREDENTIALS.value,
@@ -103,6 +111,7 @@ class LoginView(APIView):
 
         login(request, user)
         user_data = UserSerializer(user).data
+        log_info("User logged in", extra={"user_id": user.id})
         return api_response(
             success=True,
             message=SuccessMessages.USER_LOGGED_IN.value,
