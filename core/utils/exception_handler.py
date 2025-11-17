@@ -36,6 +36,7 @@ def handle_validation_error(detail, request=None):  # noqa: C901
             ErrorMessages.VALIDATION_ERROR.value,
             data=None,
             errors=detail,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
     if "Username and password are required" in str(detail):
         return api_response(
@@ -96,9 +97,10 @@ def handle_404(exc, context):
             }
             return api_response(
                 False,
-                mapping.get(model_name, ErrorMessages.SERVER_ERROR.value),
+                mapping.get(model_name, ErrorMessages.NOT_FOUND.value),
                 data=None,
                 errors={"detail": "Not found."},
+                status_code=status.HTTP_404_NOT_FOUND,
             )
 
     return api_response(
@@ -165,6 +167,7 @@ def handle_exceptions(exc, context):
             ErrorMessages.PERMISSION_DENIED.value,
             data=None,
             errors={"detail": str(exc)},
+            status_code=status.HTTP_403_FORBIDDEN,
         )
 
     if isinstance(exc, exceptions.APIException):
@@ -204,4 +207,5 @@ def handle_exceptions(exc, context):
         ErrorMessages.SERVER_ERROR.value,
         data=None,
         errors=response.data,
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     )

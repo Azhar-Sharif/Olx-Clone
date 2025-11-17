@@ -28,7 +28,7 @@ class ErrorMessages(Enum):
     VALIDATION_ERROR = "Validation error occurred."
     PERMISSION_DENIED = "Permission denied."
     SERVER_ERROR = "Internal server error."
-
+    NOT_FOUND = "Not found."
     ORDER_NOT_FOUND = "Requested order not found."
     INVENTORY_NOT_AVAILABLE = (
         "Requested quantity for one or more products is not available."
