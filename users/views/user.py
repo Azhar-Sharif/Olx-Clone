@@ -1,7 +1,10 @@
 import logging
 
 from django.contrib.auth import authenticate, login, logout
+from django.http import Http404
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.views import APIView
 
 from core.utils.enums import ErrorMessages, SuccessMessages
@@ -17,27 +20,78 @@ from users.serializers import (
 logger = logging.getLogger(__name__)
 
 
+@extend_schema_view(
+    post=extend_schema(
+        summary="Register user",
+        description="Create a new user account",
+        tags=["Users"],
+    )
+)
 class UserCreateView(generics.CreateAPIView):
-    """Register a new user"""
+    """Register a new user.
+
+    Request body (example):
+    {
+      "username": "johndoe",
+      "email": "john@example.com",
+      "password": "secret123",
+      "first_name": "John",
+      "last_name": "Doe"
+    }
+
+    Success response (api_response wrapper) example:
+    {
+      "success": true,
+      "message": "User created successfully.",
+      "data": { ...user fields... },
+      "errors": null
+    }
+    """
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
 
+    def create(self, request, *args, **kwargs):
+        log_debug(
+            "User registration payload",
+            extra={
+                "data": {
+                    k: v
+                    for k, v in request.data.items()
+                    if k.lower() not in ("password",)
+                }
+            },
+        )
+        response = super().create(request, *args, **kwargs)
+        log_info("User created", extra={"user_id": response.data.get("id")})
+        return api_response(
+            True,
+            message=SuccessMessages.USER_CREATED.value,
+            data=response.data,
+            status_code=response.status_code,
+        )
 
-def create(self, request, *args, **kwargs):
-    response = super().create(request, *args, **kwargs)
-    return api_response(
-        True,
-        message=SuccessMessages.USER_CREATED.value,
-        data=response.data,
-        status_code=response.status_code,
-    )
 
-
+@extend_schema_view(
+    get=extend_schema(
+        summary="Get profile",
+        description="Retrieve the authenticated user's profile",
+        tags=["Users"],
+    ),
+    put=extend_schema(
+        summary="Update profile",
+        description="Update the authenticated user's profile",
+        tags=["Users"],
+    ),
+    patch=extend_schema(summary="Partial update profile", tags=["Users"]),
+    delete=extend_schema(summary="Delete account", tags=["Users"]),
+)
 class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
     """
-    Authenticated user can view, update, or delete their own profile
+    Authenticated user can view, update, or delete their own profile.
+
+    Responses are wrapped in the `api_response` structure.
     """
 
     serializer_class = UserProfileUpdateSerializer
@@ -45,8 +99,110 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         return self.request.user
 
+    def update(self, request, *args, **kwargs):
+        """Full update (PUT) for the authenticated user's profile."""
+        try:
+            response = super().update(request, *args, **kwargs)
+            log_info("Profile updated", extra={"user_id": request.user.id})
+            return api_response(
+                True,
+                message="Profile updated",
+                data=response.data,
+                status_code=response.status_code,
+            )
+
+        except ValidationError as exc:
+            log_error(
+                "Profile update validation failed",
+                extra={"error": exc.detail, "user_id": request.user.id},
+            )
+            return api_response(
+                False,
+                message="Validation failed",
+                data=None,
+                errors=exc.detail,
+                status_code=400,
+            )
+
+        except PermissionDenied as exc:
+            log_error(
+                "Profile update permission denied",
+                extra={"error": str(exc), "user_id": request.user.id},
+            )
+            return api_response(
+                False,
+                message="Permission denied",
+                data=None,
+                errors={"detail": str(exc)},
+                status_code=403,
+            )
+
+        except Http404 as exc:
+            log_error(
+                "Profile update not found",
+                extra={"error": str(exc), "user_id": request.user.id},
+            )
+            return api_response(
+                False,
+                message="User not found",
+                data=None,
+                errors={"detail": str(exc)},
+                status_code=404,
+            )
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete the authenticated user's profile."""
+        try:
+            user_id = request.user.id
+            super().destroy(request, *args, **kwargs)
+            log_info("User deleted", extra={"user_id": user_id})
+            return api_response(True, message="Profile deleted", data=None)
+
+        except PermissionDenied as exc:
+            log_error(
+                "Profile deletion permission denied",
+                extra={"error": str(exc), "user_id": request.user.id},
+            )
+            return api_response(
+                False,
+                message="Permission denied",
+                data=None,
+                errors={"detail": str(exc)},
+                status_code=403,
+            )
+
+        except Http404 as exc:
+            log_error(
+                "Profile deletion not found",
+                extra={"error": str(exc), "user_id": request.user.id},
+            )
+            return api_response(
+                False,
+                message="User not found",
+                data=None,
+                errors={"detail": str(exc)},
+                status_code=404,
+            )
+
 
 class LoginView(APIView):
+    """Login endpoint
+
+    Request example:
+    {
+      "username": "johndoe",
+      "password": "secret123"
+    }
+
+    Success response example:
+    {
+      "success": true,
+      "message": "User logged in successfully.",
+      "data": {"id": 1, "username": "johndoe"},
+      "errors": null
+    }
+    """
+
     permission_classes = [permissions.AllowAny]
     serializer_class = LoginSerializer
 
@@ -120,11 +276,19 @@ class LoginView(APIView):
         )
 
 
+@extend_schema_view(
+    post=extend_schema(
+        summary="Logout user",
+        description="Logout the authenticated user",
+        tags=["Users"],
+    )
+)
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         logout(request)
+        log_info("User logged out", extra={"user_id": request.user.id})
         return api_response(
             True, message=SuccessMessages.USER_LOGGED_OUT.value, data=None
         )
