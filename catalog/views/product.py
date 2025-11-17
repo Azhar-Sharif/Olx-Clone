@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets
 from rest_framework.parsers import FormParser, MultiPartParser
 
@@ -9,7 +10,39 @@ from core.utils.logger import log_debug, log_error, log_info
 from core.utils.response import api_response
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="List products",
+        description="Retrieve a list of products",
+        tags=["Products"],
+    ),
+    retrieve=extend_schema(
+        summary="Retrieve product",
+        description="Get product details",
+        tags=["Products"],
+    ),
+    create=extend_schema(
+        summary="Create product",
+        description="Create a new product",
+        tags=["Products"],
+    ),
+    update=extend_schema(
+        summary="Update product",
+        description="Update product",
+        tags=["Products"],
+    ),
+    partial_update=extend_schema(
+        summary="Partial update product", tags=["Products"]
+    ),
+    destroy=extend_schema(summary="Delete product", tags=["Products"]),
+)
 class ProductViewSet(viewsets.ModelViewSet):
+    """Product endpoints
+
+    All responses are wrapped using the project's `api_response` helper.
+    Authentication: SessionAuthentication (Django sessions)
+    Permissions: Owner or read-only
+    """
 
     queryset = Product.objects.select_related("category", "user").all()
     serializer_class = ProductSerializer

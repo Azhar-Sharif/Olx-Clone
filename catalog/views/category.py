@@ -7,6 +7,24 @@ from core.utils.response import api_response
 
 
 class CategoryListView(generics.ListAPIView):
+    """
+    List all categories.
+
+    Authentication: Not required
+    Permissions: Public
+
+    Response example:
+    {
+        "success": true,
+        "message": "Categories retrieved successfully",
+        "data": [
+            {"id": 1, "category_name": "Electronics"},
+            {"id": 2, "category_name": "Books"}
+        ],
+        "errors": null
+    }
+    """
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
@@ -21,6 +39,21 @@ class CategoryListView(generics.ListAPIView):
 
 
 class CategoryDetailView(generics.RetrieveAPIView):
+    """
+    Retrieve a category by ID.
+
+    Authentication: Not required
+    Permissions: Public
+
+    Response example:
+    {
+        "success": true,
+        "message": "Category retrieved successfully",
+        "data": {"id": 1, "category_name": "Electronics"},
+        "errors": null
+    }
+    """
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]

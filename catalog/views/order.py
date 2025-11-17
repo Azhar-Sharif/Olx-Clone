@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import permissions, viewsets
 
 from catalog.models import Order
@@ -8,7 +9,43 @@ from core.utils.logger import log_debug, log_error, log_info
 from core.utils.response import api_response
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="List orders",
+        description="List orders for the owner of that order",
+        tags=["Orders"],
+    ),
+    retrieve=extend_schema(
+        summary="Retrieve order",
+        description="Get order details by id",
+        tags=["Orders"],
+    ),
+    create=extend_schema(
+        summary="Create order",
+        description="Place a new order",
+        tags=["Orders"],
+    ),
+    update=extend_schema(
+        summary="Update order",
+        description="Update an existing order only shipping address allowed to update",
+        tags=["Orders"],
+    ),
+    partial_update=extend_schema(
+        summary="Partial update order only shipping address allowed to change",
+        tags=["Orders"],
+    ),
+    destroy=extend_schema(summary="Cancel order", tags=["Orders"]),
+)
 class OrderViewSet(viewsets.ModelViewSet):
+    """Order endpoints
+
+    Endpoints allow the authenticated owner to place and view orders.
+
+    All responses use the unified `api_response` structure.
+    Authentication: SessionAuthentication
+    Permissions: Owner only
+    """
+
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOnly]
 

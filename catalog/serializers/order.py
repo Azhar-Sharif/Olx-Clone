@@ -13,9 +13,38 @@ class OrderProductInputSerializer(serializers.Serializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    """
+    Order serializer.
+
+    Request body example:
+    {
+        "shipping_address": "123 Main St",
+        "products_data": [
+            {
+                "product_id": 1,
+                "quantity": 2
+            },
+            {
+                "product_id": 3,
+                "quantity": 1
+            }
+        ]
+    }
+
+    Response (api_response wrapper) example:
+    {
+        "success": true,
+        "message": "Order placed successfully",
+        "data": { ... serialized order ... },
+        "errors": null
+    }
+    """
+
     user = serializers.ReadOnlyField(source="user.username")
     products = serializers.JSONField(read_only=True)
-    products_data = OrderProductInputSerializer(many=True, write_only=True)
+    products_data = OrderProductInputSerializer(
+        many=True, write_only=True, help_text="List of products with quantity"
+    )
 
     class Meta:
         model = Order

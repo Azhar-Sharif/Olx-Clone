@@ -6,20 +6,48 @@ from catalog.models import Category, Product
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    """Product serializer
+
+    Request body example:
+    {
+        "product_name": "Sample",
+        "quantity": 2,
+        "description": "Nice item",
+        "price": "10.00",
+        "category": 1
+    }
+
+    Response (api_response wrapper) example:
+    {
+      "success": true,
+      "message": "OK",
+      "data": { ... serialized product ... },
+      "errors": null
+    }
+    """
 
     category = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all()
+        queryset=Category.objects.all(),
+        help_text="Primary key of the product category",
     )
 
-    category_name = serializers.ReadOnlyField(source="category.category_name")
+    category_name = serializers.ReadOnlyField(
+        source="category.category_name", help_text="Category name"
+    )
 
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
-    user_name = serializers.ReadOnlyField(source="user.username")
+    user_name = serializers.ReadOnlyField(
+        source="user.username", help_text="Owner username"
+    )
 
-    product_img = serializers.ImageField(required=False, allow_null=True)
+    product_img = serializers.ImageField(
+        required=False, allow_null=True, help_text="Product image file"
+    )
 
-    product_img_url = serializers.SerializerMethodField(read_only=True)
+    product_img_url = serializers.SerializerMethodField(
+        read_only=True, help_text="Full URL to the product image"
+    )
 
     class Meta:
         model = Product
