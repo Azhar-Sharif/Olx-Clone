@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "users",
     "catalog",
     "cloudinary",
@@ -142,8 +143,17 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
     "EXCEPTION_HANDLER": "core.utils.exception_handler.handle_exceptions",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
+SPECTACULAR_SETTINGS = {
+    "TITLE": "OLX Clone API",
+    "DESCRIPTION": "API schema for OLX clone (versioned v1). All endpoints use session authentication.",
+    "VERSION": "v1",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SECURITY": [{"sessionAuth": []}],
+    "COMPONENT_SPLIT_REQUEST": True,
+}
 
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
