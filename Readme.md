@@ -1,7 +1,6 @@
 # 🛒 OLX Clone (Django)
 
-A full-stack **Django**-based OLX clone where users can buy, sell, and manage products.  
-Built following industry best practices — **GitFlow branching**, **Docker**, **Pre-commit hooks**, and **CI/CD** integration.
+A full-stack **Django**-based OLX clone where users can manage listings and perform CRUD operations on products and orders. Built with a modular structure, session-based auth, centralized logging, unified API responses, and auto-generated API documentation (drf-spectacular + Swagger).
 
 
 ## 🚀 Project Overview
@@ -26,11 +25,63 @@ A user can:
 
 ## 📦 Current status
 
-- Core catalog app implemented (products, categories, orders modules are present in `catalog/`).
-- REST API serializers and admin are implemented for the catalog models.
-- Authentication, product CRUD, filtering and pagination are available.
-- Docker support and a development `docker-compose.yml` are included.
-- Tests exist and can be run with `pytest`.
+- Apps: `users`, `catalog`, `core`
+- REST API implemented with serializers and viewsets for products and orders
+- API docs available via Swagger UI (`/api/docs/`) and schema at `/api/docs/schema/`
+- Centralized logging (rotating files: `app_info.log`, `app_error.log`, `app_debug.log`)
+- Unified API response format and custom DRF exception handler
+- Docker Compose included for local/dev runs
+- Tests with `pytest` and coverage; coverage enforcement can be scoped to models via `pytest.ini`
+
+
+## 🔧 API documentation
+
+- Swagger UI: `http://<host>/api/docs/`
+- OpenAPI schema (JSON/YAML): `http://<host>/api/docs/schema/`
+
+Notes:
+- Schema is generated with `drf-spectacular` and grouped with tags (Users, Products, Orders).
+- Authentication in docs: SessionAuthentication is configured — use Django session cookies to try endpoints in the interactive UI.
+- All endpoints use API version `v1` in schema metadata.
+
+
+## 🧩 Unified responses
+
+All API responses follow the same structure returned by `core.utils.response.api_response()`:
+
+{
+  "success": true|false,
+  "message": "string or null",
+  "data": object|array|null,
+  "errors": object|array|null
+}
+
+This applies to normal responses and to errors returned by the custom exception handler in `core.utils.exception_handler`.
+
+
+## ☁️ Cloudinary (media storage)
+
+The project can use Cloudinary to store user-uploaded media (product images). Environment variables supported:
+- `CLOUDINARY_URL` (recommended) or
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+
+Install (if not already):
+
+pip install cloudinary django-cloudinary-storage
+
+Django settings use `cloudinary_storage` when credentials are present.
+
+## 🧭 Logging
+
+Logs are stored in the `logs/` directory. Files created by default:
+- `app_info.log` — INFO and above (rotating, 5MB, 5 backups)
+- `app_error.log` — ERROR and above (rotating, 5MB, 3 backups)
+- `app_debug.log` — DEBUG (rotating, 5MB, 5 backups)
+
+Use the helper functions in `core.utils.logger`:
+- `log_info(message, extra=None)`
+- `log_error(message, extra=None)`
+- `log_debug(message, extra=None)`
 
 
 ## ⚙️ Requirements
@@ -44,6 +95,8 @@ A user can:
 ### 🧰 Python Dependencies
 - `django`
 - `djangorestframework`
+- `drf-spectacular`
+- `django-cloudinary-storage`, `cloudinary`
 - `pytest`, `pytest-cov`
 - `black`, `isort`, `flake8`
 - `pre-commit`
@@ -51,13 +104,6 @@ A user can:
 - `python-dotenv`
 - `django-cloudinary-storage`
 - `cloudinary`
-
-## Cloudinary (media storage)
-
-- The project using Cloudinary to store and serve user-uploaded media (product images).
-
-- Environment variables (recommended):
-  - Set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
 
 
 ## 🚀 Quick start (development)
@@ -73,7 +119,11 @@ Recommended: use Docker Compose for a reproducible environment.
    docker-compose exec web python manage.py migrate
    docker-compose exec web python manage.py createsuperuser
 
-3. Run the development server (if not started via Docker):
+3. Open the Swagger UI:
+
+   http://localhost:8000/api/docs/
+
+4. Run the development server locally (if not using Docker):
 
    python manage.py runserver
 
@@ -95,6 +145,6 @@ With Docker (if a test service is configured):
 
 ## Contributing
 
-- Follow the GitFlow branching model.
+- Follow GitFlow branching model.
 - Run formatting and linters before committing (`black`, `isort`, `flake8`).
 - Pre-commit hooks are configured for common checks.
