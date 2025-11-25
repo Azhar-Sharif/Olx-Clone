@@ -43,10 +43,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "drf_spectacular",
-    "users",
-    "catalog",
+    "django_seed",
     "cloudinary",
     "cloudinary_storage",
+    "users",
+    "catalog",
+    "utils",
 ]
 
 MIDDLEWARE = [
