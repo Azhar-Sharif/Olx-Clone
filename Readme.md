@@ -108,27 +108,155 @@ Use the helper functions in `core.utils.logger`:
 
 ## 🚀 Quick start (development)
 
-Recommended: use Docker Compose for a reproducible environment.
+# 🏠 Running the OLX Clone Locally
 
-1. Build and start services:
+## 1️⃣ Prerequisites
 
-   docker-compose up --build -d
+* Python **3.12+**
+* PostgreSQL **16+** (or SQLite for quick testing)
+* Git
+* pip
+* Optional: Docker & Docker Compose
 
-2. Apply migrations and create a superuser (example using the web container):
+---
 
-   docker-compose exec web python manage.py migrate
-   docker-compose exec web python manage.py createsuperuser
+## 2️⃣ Clone the Repository
 
-3. Open the Swagger UI:
+```bash
+git clone git@github.com:Azhar-Sharif/Olx-Clone.git
+cd Olx-Clone
+```
 
-   http://localhost:8000/api/docs/
+---
 
-4. Run the development server locally (if not using Docker):
+## 3️⃣ Set Up Virtual Environment (Recommended)
 
-   python manage.py runserver
+```bash
+# Create virtual environment
+python3 -m venv .venv
 
-Notes:
-- If you prefer a local virtual environment, install dependencies from `requirements.txt` and use the project `manage.py` directly.
+# Activate it
+source .venv/bin/activate
+
+# Upgrade pip
+pip install --upgrade pip
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+On Windows, activate the venv using:
+
+ ```bash
+ .venv\Scripts\activate
+ ```
+
+---
+
+## 4️⃣ Configure Environment Variables
+
+Create a `.env` file in the project root (if using `python-dotenv`) and add:
+
+```env
+# Django settings
+DJANGO_SECRET_KEY=<your-secret-key>
+DEBUG=True
+DJANGO_ENV=development
+
+# Database
+DATABASE_URL=postgres://user:password@localhost:5432/olx_clone
+
+# Cloudinary (optional for media)
+CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
+
+
+## 5️⃣ Apply Migrations
+
+```bash
+# Make migrations
+python manage.py makemigrations
+
+# Apply migrations
+python manage.py migrate
+```
+
+---
+
+## 6️⃣ Create Superuser
+
+```bash
+python manage.py createsuperuser
+```
+
+## 7️⃣ Seed Mock Data (Optional, Development Only)
+
+Seed all mock data (users, categories, products, orders):
+
+```bash
+python manage.py seed_mock_data all --number 10
+```
+
+## 8️⃣ Run Development Server
+
+```bash
+python manage.py runserver
+```
+
+* Server URL: `http://localhost:8000/`
+* Swagger UI: `http://localhost:8000/api/docs/`
+* OpenAPI schema: `http://localhost:8000/api/docs/schema/`
+
+---
+
+## 9️⃣ Testing
+
+Run tests locally:
+
+```bash
+pytest
+```
+
+* With coverage (optional):
+
+```bash
+pytest --cov=.
+```
+
+* In Docker (if using a test container):
+
+```bash
+docker-compose exec web pytest
+```
+
+---
+
+## 🔧 Docker Compose Workflow
+
+**Start services using Docker Compose:**
+
+```bash
+docker-compose up --build -d
+```
+
+**Apply migrations and create superuser in the container:**
+
+```bash
+docker-compose exec web python manage.py migrate
+docker-compose exec web python manage.py createsuperuser
+```
+
+**Seed mock data inside container (optional):**
+
+```bash
+docker-compose exec web python manage.py seed_mock_data all --number 10
+```
+
+**Stop services:**
+
+```bash
+docker-compose down
+```
+
 
 
 ## 🧪 Running tests
@@ -142,6 +270,92 @@ Locally (virtualenv):
 With Docker (if a test service is configured):
 
   docker-compose exec web pytest
+
+
+
+# 🧩 Database Seeder (Manual + Command-Based)
+
+This project now uses a **clean, fully custom, idempotent seeding system** written without `django-seed`.
+
+---
+
+## 📌 Location
+
+* **Seeder logic:**
+  `utils/seeder_functions.py`
+
+* **Management command (manual execution):**
+  `utils/management/commands/seed.py`
+
+---
+
+## 🎯 Seeder Behavior
+
+### ✔ Idempotent
+
+* Each seeding function checks whether relevant data already exists.
+* It **never creates duplicates**.
+* Running the seeder multiple times is safe.
+
+### ✔ Manual Only (Recommended)
+
+The seeder is **not automatically triggered** when running the server or migrations.
+You explicitly choose when to seed.
+
+### ✔ Independent per Model
+
+You can seed:
+
+* Only users
+* Only catalog (categories, products, orders)
+* Everything
+
+
+### 🔹 Seed Users Model
+
+```bash
+python manage.py seed_mock_data users --number 10
+```
+
+### 🔹 Seed Catalog (categories → products → orders)
+
+```bash
+python manage.py seed_mock_data catalog --number 10
+```
+
+### 🔹 Seed Everything
+
+```bash
+python manage.py seed_mock_data all --number 10
+```
+
+### 🔹 From Django Shell (alternative)
+
+```bash
+python manage.py shell -c "from utils.seeder_functions import seed_all; seed_all()"
+```
+
+Or individual functions:
+
+```bash
+python manage.py shell -c "from utils.seeder_functions import seed_users; seed_users(5)"
+```
+
+---
+
+## ⚙ What the Seeder Does
+
+* Creates:
+
+  * Users (role: USER)
+  * Categories (Electronics, Books, etc.)
+  * Products with assigned users + categories
+  * Orders with nested product lists
+  * Recomputes order totals automatically.
+* Uses **Faker** instead of `django-seed`.
+
+---
+
 
 ## Contributing
 
