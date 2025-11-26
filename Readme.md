@@ -108,19 +108,7 @@ Use the helper functions in `core.utils.logger`:
 
 ## 🚀 Quick start (development)
 
-# 🏠 Running the OLX Clone Locally
-
-## 1️⃣ Prerequisites
-
-* Python **3.12+**
-* PostgreSQL **16+** (or SQLite for quick testing)
-* Git
-* pip
-* Optional: Docker & Docker Compose
-
----
-
-## 2️⃣ Clone the Repository
+### 1️⃣ Clone the Repository
 
 ```bash
 git clone git@github.com:Azhar-Sharif/Olx-Clone.git
@@ -129,77 +117,79 @@ cd Olx-Clone
 
 ---
 
-## 3️⃣ Set Up Virtual Environment (Recommended)
+### 2️⃣ Environment Variables
+
+* Copy `.env.example` to `.env.local` for local development:
 
 ```bash
-# Create virtual environment
-python3 -m venv .venv
-
-# Activate it
-source .venv/bin/activate
-
-# Upgrade pip
-pip install --upgrade pip
-
-# Install dependencies
-pip install -r requirements.txt
+cp .env.example .env.local
 ```
 
-On Windows, activate the venv using:
-
- ```bash
- .venv\Scripts\activate
- ```
+* Edit `.env.local` and fill in your local credentials, e.g., database and Django secret key.
 
 ---
 
-## 4️⃣ Configure Environment Variables
+### 3️⃣ Docker Compose Local Setup
 
-Create a `.env` file in the project root (if using `python-dotenv`) and add:
-
-```env
-# Django settings
-DJANGO_SECRET_KEY=<your-secret-key>
-DEBUG=True
-DJANGO_ENV=development
-
-# Database
-DATABASE_URL=postgres://user:password@localhost:5432/olx_clone
-
-# Cloudinary (optional for media)
-CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
-
-
-## 5️⃣ Apply Migrations
+**Start containers:**
 
 ```bash
-# Make migrations
-python manage.py makemigrations
+make docker-local-up
+```
 
-# Apply migrations
-python manage.py migrate
+* Builds images and starts the web and db services.
+* `web` is your Django app; `db` is PostgreSQL.
+
+**Stop containers:**
+
+```bash
+make docker-local-down
+```
+
+**Build containers from scratch (no cache):**
+
+```bash
+make docker-local-build
 ```
 
 ---
 
-## 6️⃣ Create Superuser
+Here’s the updated README snippet with the **superuser creation step** added under the Docker Compose workflow, keeping everything else intact and reflecting your current setup:
+
+---
+
+### 4️⃣ Database Setup
+
+**Run migrations:**
 
 ```bash
-python manage.py createsuperuser
+make db-makemigrations-local 
+make db-migrate-local          
 ```
 
-## 7️⃣ Seed Mock Data (Optional, Development Only)
-
-Seed all mock data (users, categories, products, orders):
+**Create superuser:**
 
 ```bash
-python manage.py seed_mock_data all --number 10
+docker compose -f docker/docker-compose.local.yml exec web python manage.py createsuperuser
 ```
 
-## 8️⃣ Run Development Server
+**Seed mock data (optional):**
 
 ```bash
-python manage.py runserver
+make seed-all-local
+```
+
+* You can also seed individual apps:
+
+```bash
+make seed-all-local APP=users
+make seed-all-local APP=catalog
+```
+
+### 5️⃣ Running the Server
+
+```bash
+docker compose -f docker/docker-compose.local.yml exec web python manage.py runserver 0.0.0.0:8000
 ```
 
 * Server URL: `http://localhost:8000/`
@@ -208,138 +198,66 @@ python manage.py runserver
 
 ---
 
-## 9️⃣ Testing
+### 6️⃣ Running Tests
 
-Run tests locally:
+Run tests **inside Docker**:
 
 ```bash
-pytest
+make test-local
 ```
 
-* With coverage (optional):
+* Tests run with coverage enforced via `pytest.ini`.
+* Exit code propagates → used in pre-commit and pre-push hooks.
+
+---
+
+### 7️⃣ Pre-commit & Pre-push Hooks
+
+The project uses **pre-commit hooks** to enforce code quality and test coverage:
+
+* **Pre-commit** (blocks commits if checks fail):
+
+  * Black formatting
+  * isort imports
+  * flake8 linting
+  * Optional: tests via `make test-local`
+
+* **Pre-push** (blocks pushes if tests fail or coverage <60%):
+
+  * Runs `make test-local` inside Docker.
+
+**Install hooks:**
 
 ```bash
-pytest --cov=.
-```
-
-* In Docker (if using a test container):
-
-```bash
-docker-compose exec web pytest
+pre-commit install
+pre-commit install --hook-type pre-push
 ```
 
 ---
 
-## 🔧 Docker Compose Workflow
+### 8️⃣ Environment Variables Reference
 
-**Start services using Docker Compose:**
+`.env.example` contains all the required variables for development:
 
-```bash
-docker-compose up --build -d
+```env
+# Django settings
+DJANGO_SECRET_KEY=<your-secret-key>
+DEBUG=True
+DJANGO_ENV=development
+
+# Database
+POSTGRES_DB=your_db_username
+POSTGRES_USER=user
+POSTGRES_PASSWORD=your_password
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+
+# Cloudinary (optional for media)
+CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
 ```
 
-**Apply migrations and create superuser in the container:**
-
-```bash
-docker-compose exec web python manage.py migrate
-docker-compose exec web python manage.py createsuperuser
-```
-
-**Seed mock data inside container (optional):**
-
-```bash
-docker-compose exec web python manage.py seed_mock_data all --number 10
-```
-
-**Stop services:**
-
-```bash
-docker-compose down
-```
-
-
-
-## 🧪 Running tests
-
-Locally (virtualenv):
-
-- Install dev dependencies and run:
-
-  pytest
-
-With Docker (if a test service is configured):
-
-  docker-compose exec web pytest
-
-
-
-# 🧩 Database Seeder (Manual + Command-Based)
-
-This project now uses a **clean, fully custom, idempotent seeding system** written without `django-seed`.
-
----
-
-## 📌 Location
-
-* **Seeder logic:**
-  `utils/seeder_functions.py`
-
-* **Management command (manual execution):**
-  `utils/management/commands/seed.py`
-
----
-
-## 🎯 Seeder Behavior
-
-### ✔ Idempotent
-
-* Each seeding function checks whether relevant data already exists.
-* It **never creates duplicates**.
-* Running the seeder multiple times is safe.
-
-### ✔ Manual Only (Recommended)
-
-The seeder is **not automatically triggered** when running the server or migrations.
-You explicitly choose when to seed.
-
-### ✔ Independent per Model
-
-You can seed:
-
-* Only users
-* Only catalog (categories, products, orders)
-* Everything
-
-
-### 🔹 Seed Users Model
-
-```bash
-python manage.py seed_mock_data users --number 10
-```
-
-### 🔹 Seed Catalog (categories → products → orders)
-
-```bash
-python manage.py seed_mock_data catalog --number 10
-```
-
-### 🔹 Seed Everything
-
-```bash
-python manage.py seed_mock_data all --number 10
-```
-
-### 🔹 From Django Shell (alternative)
-
-```bash
-python manage.py shell -c "from utils.seeder_functions import seed_all; seed_all()"
-```
-
-Or individual functions:
-
-```bash
-python manage.py shell -c "from utils.seeder_functions import seed_users; seed_users(5)"
-```
+* Copy to `.env.local` for local development.
+* The Docker Compose setup automatically uses `.env.local` for container environment variables.
 
 ---
 

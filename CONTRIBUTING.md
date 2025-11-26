@@ -1,32 +1,109 @@
 ## Branching model
-- We use **GitFlow**:
-  - `main` = production/stable
-  - `develop` = integration branch
-  - Features from `develop`: `feature/<name>`
+
+* We use **GitFlow**:
+
+  * `main` = production/stable
+  * `develop` = integration branch
+  * Features from `develop`: `feature/<name>`
 
 ## Commits
-- Keep commits **atomic** and descriptive.
-- Prefer Conventional Commit styles where helpful:
-  - `feat: ...`, `fix: ...`, `chore: ...`, `docs: ...`, `build: ...`, `ci: ...`, `test: ...`, `style: ...`
 
-## Pre-commit hooks
-- Install once: `pre-commit install` and `pre-commit install --hook-type pre-push`
-- Hooks:
-  - On commit: `black`, `isort`, `flake8`
-  - On pre-push: `pytest --cov` with **≥60%** coverage
+* Keep commits **atomic** and descriptive.
+* Prefer **Conventional Commit** style:
+
+  * `feat: ...`, `fix: ...`, `chore: ...`, `docs: ...`, `build: ...`, `ci: ...`, `test: ...`, `style: ...`
+
+## Pre-commit & Pre-push hooks
+
+* Install once locally:
+
+```bash
+pre-commit install
+pre-commit install --hook-type pre-push
+```
+
+* **On commit**:
+
+  * Runs `black`, `isort`, `flake8`
+* **On pre-push**:
+
+  * Runs `make test-local` (pytest inside Docker)
+  * Fails if tests fail or coverage <60%
+  * Ensures code pushed to `develop` meets minimum quality
+
+> ✅ Notes: You do **not** need to activate a virtual environment; the hooks run tests inside Docker containers.
 
 ## Tests
-- Add/adjust tests for your changes.
-- Run locally: `pytest`
+
+* Add or adjust tests for your changes.
+* Run locally inside Docker:
+
+```bash
+make test-local
+```
+
+* Or, for specific apps:
+
+```bash
+docker compose exec web pytest path/to/app
+```
 
 ## Pull Requests
-- Open PRs **into `develop`**
-- **At least 1 review required**
 
-## Docker (dev)
-- Run app: `docker compose up -d`
-- Stop: `docker compose down`
+* Open PRs **into `develop`**
+* **At least 1 review required**
 
-## Secrets
-- Never commit secrets.
-- Use `.env` (untracked) and update `.env.example`.
+## Docker (development)
+
+* Start services (web + db):
+
+```bash
+make docker-local-up
+```
+
+* Stop services:
+
+```bash
+make docker-local-down
+```
+
+* Rebuild images (no cache):
+
+```bash
+make docker-local-build
+```
+
+* Apply migrations inside containers:
+
+```bash
+make db-makemigrations-local
+make db-migrate-local
+```
+
+Got it! Here's how it fits neatly into your README under the Docker Compose workflow:
+
+---
+
+* Create Superuser:
+
+After running migrations, create a Django superuser **inside the Docker container**:
+
+```bash
+docker compose -f docker/docker-compose.local.yml exec web python manage.py createsuperuser
+```
+
+* Seed mock data (optional):
+
+```bash
+make seed-all-local
+```
+
+## Environment & Secrets
+
+* Use `.env.local` for local development (copy from `.env.example`):
+
+```bash
+cp .env.example .env.local
+```
+
+* Never commit secrets. Update `.env.example` for shared config without credentials.
