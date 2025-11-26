@@ -30,5 +30,6 @@ db-makemigrations-local:
 
 seed-all-local:
 	docker compose -f $(COMPOSE_LOCAL) exec -T web python manage.py seed_mock_data all --number 5
+
 test-local:
-    docker compose -f $(COMPOSE_LOCAL) run --rm web pytest -q
+	docker compose -f $(COMPOSE_LOCAL) run --rm -T web pytest
