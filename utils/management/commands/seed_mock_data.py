@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from core.utils.logger import log_err, log_info
+from core.utils.logger import log_error, log_info
 from utils.seeder_functions import seed_all, seed_catalog, seed_users
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if not settings.DEBUG:
-            log_err("Seeding can only be run in development mode.")
+            log_error("Seeding can only be run in development mode.")
             return
 
         model = options["model"].lower()
@@ -47,4 +47,4 @@ class Command(BaseCommand):
                 log_info("Seeding ALL data in ordering.")
                 seed_all(number)
         except Exception as e:
-            log_err(f"Seeding failed: {e}")
+            log_error(f"Seeding failed: {e}")

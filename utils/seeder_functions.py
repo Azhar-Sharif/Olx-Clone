@@ -45,7 +45,8 @@ def seed_catalog(number=10):
             [Category(category_name=c) for c in categories]
         )
         log_info("Categories seeded!")
-
+    else:
+        log_info("Skipping category seeding: records already exist.")
     categories = list(Category.objects.all())
     users = list(User.objects.filter(role="USER"))
 
@@ -67,6 +68,8 @@ def seed_catalog(number=10):
 
         Product.objects.bulk_create(products)
         log_info("Products seeded!")
+    else:
+        log_info("Skipping product seeding: records already exist.")
 
     products = list(Product.objects.all())
 
@@ -101,6 +104,8 @@ def seed_catalog(number=10):
             order.recompute_total()
 
         log_info("Orders seeded!")
+    else:
+        log_info("Skipping order seeding: records already exist")
 
 
 def seed_all(number=10):
