@@ -16,8 +16,8 @@ repos:
   - repo: local
     hooks:
       - id: pytest-cov
-        name: Run pytest with coverage ≥60%
-        entry: pytest  --cov=catalog/models  --cov=user/models --cov-report=term-missing --cov-fail-under=60
+        name: Run pytest with coverage ≥60% inside Docker
+        entry: make test-local
         language: system
         pass_filenames: false
         stages: [pre-push]
