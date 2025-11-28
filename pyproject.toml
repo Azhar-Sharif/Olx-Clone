@@ -1,21 +1,43 @@
 [tool.black]
 line-length = 79
-target-version = ['py312']
-skip-string-normalization = false
-include = '\.pyi?$'
-force-exclude = '''
+target-version = ['py311']
+exclude = '''
 /(
-    migrations
+    \.git
+  | \.mypy_cache
+  | \.venv
+  | venv
+  | env
   | __pycache__
-  | \.git
-  | \.pytest_cache
+  | migrations
+  | manage\.py
+  | staticfiles
+  | static
+  | media
+  | mediafiles
+  | logs
   | build
   | dist
-  | env
-  | venv
-  | \.venv
+  | .*\.egg-info
 )/
 '''
+
 [tool.isort]
 profile = "black"
 line_length = 79
+skip_glob = [
+    "venv/**",
+    "env/**",
+    ".venv/**",
+    "*/migrations/*",
+    "*/staticfiles/*",
+    "*/static/*",
+    "*/media/*",
+    "*/mediafiles/*",
+    "*/logs/*",
+    "*/__pycache__/*",
+    "build/*",
+    "dist/*",
+    "*.egg-info/*"
+]
+skip = ["manage.py"]
