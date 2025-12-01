@@ -1,3 +1,9 @@
+"""Product API views.
+
+Expose CRUD endpoints for products using a ModelViewSet and the
+api_response wrapper.
+"""
+
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -32,16 +38,16 @@ from core.utils.response import api_response
         tags=["Products"],
     ),
     partial_update=extend_schema(
-        summary="Partial update product", tags=["Products"]
+        summary="Partial update product",
+        tags=["Products"],
     ),
     destroy=extend_schema(summary="Delete product", tags=["Products"]),
 )
 class ProductViewSet(viewsets.ModelViewSet):
-    """Product endpoints
+    """Provides CRUD endpoints for products.
 
-    All responses are wrapped using the project's `api_response` helper.
-    Authentication: SessionAuthentication (Django sessions)
-    Permissions: Owner or read-only
+    Responses are wrapped using the api_response helper, and only the
+    owner can modify or delete products.
     """
 
     queryset = Product.objects.select_related("category", "user").all()
@@ -51,10 +57,14 @@ class ProductViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer):
-
+        """Save a new product instance with the current user as
+        owner.
+        """
         serializer.save(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
+        """Create a product and return a wrapped sostume API
+        response."""
         log_info("Product create called", extra={"user_id": request.user.id})
         log_debug(
             "Product create payload",
@@ -63,7 +73,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                     k: v
                     for k, v in request.data.items()
                     if k.lower() not in ("password", "token")
-                }
+                },
             },
         )
         try:

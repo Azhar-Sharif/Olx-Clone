@@ -1,3 +1,8 @@
+"""Product serializers.
+
+Provides serialization and validation for product data.
+"""
+
 from decimal import Decimal
 
 from rest_framework import serializers
@@ -6,25 +11,8 @@ from catalog.models import Category, Product
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    """Product serializer
-
-    Request body example:
-    {
-        "product_name": "Sample",
-        "quantity": 2,
-        "description": "Nice item",
-        "price": "10.00",
-        "category": 1
-    }
-
-    Response (api_response wrapper) example:
-    {
-      "success": true,
-      "message": "OK",
-      "data": { ... serialized product ... },
-      "errors": null
-    }
-    """
+    """Serializes product data for list, detail, and write
+    operations."""
 
     category = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),
@@ -32,21 +20,26 @@ class ProductSerializer(serializers.ModelSerializer):
     )
 
     category_name = serializers.ReadOnlyField(
-        source="category.category_name", help_text="Category name"
+        source="category.category_name",
+        help_text="Category name",
     )
 
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     user_name = serializers.ReadOnlyField(
-        source="user.username", help_text="Owner username"
+        source="user.username",
+        help_text="Owner username",
     )
 
     product_img = serializers.ImageField(
-        required=False, allow_null=True, help_text="Product image file"
+        required=False,
+        allow_null=True,
+        help_text="Product image file",
     )
 
     product_img_url = serializers.SerializerMethodField(
-        read_only=True, help_text="Full URL to the product image"
+        read_only=True,
+        help_text="Full URL to the product image",
     )
 
     class Meta:
@@ -71,8 +64,9 @@ class ProductSerializer(serializers.ModelSerializer):
         return obj.product_img.url if obj.product_img else None
 
     def validate_price(self, value: Decimal) -> Decimal:
+        """Validates that the price is zero or positive."""
         if value < 0:
             raise serializers.ValidationError(
-                "Price must be zero or positive."
+                "Price must be zero or positive.",
             )
         return value
