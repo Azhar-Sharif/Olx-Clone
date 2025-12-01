@@ -8,7 +8,7 @@ import logging
 
 from django.contrib.auth import authenticate, login, logout
 from django.http import Http404
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema_view
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.views import APIView
@@ -16,6 +16,14 @@ from rest_framework.views import APIView
 from core.utils.enums import ErrorMessages, SuccessMessages
 from core.utils.logger import log_debug, log_error, log_info
 from core.utils.response import api_response
+from docs.users.docs_users import (
+    login_schema,
+    logout_schema,
+    profile_delete_schema,
+    profile_retrieve_schema,
+    profile_update_schema,
+    register_schema,
+)
 from users.models import User
 from users.serializers import (
     LoginSerializer,
@@ -27,11 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema_view(
-    post=extend_schema(
-        summary="Register user",
-        description="Create a new user account",
-        tags=["Users"],
-    ),
+    post=register_schema,
 )
 class UserCreateView(generics.CreateAPIView):
     """Creates a new user account.
@@ -70,18 +74,10 @@ class UserCreateView(generics.CreateAPIView):
 
 
 @extend_schema_view(
-    get=extend_schema(
-        summary="Get profile",
-        description="Retrieve the authenticated user's profile",
-        tags=["Users"],
-    ),
-    put=extend_schema(
-        summary="Update profile",
-        description="Update the authenticated user's profile",
-        tags=["Users"],
-    ),
-    patch=extend_schema(summary="Partial update profile", tags=["Users"]),
-    delete=extend_schema(summary="Delete account", tags=["Users"]),
+    get=profile_retrieve_schema,
+    put=profile_update_schema,
+    patch=profile_update_schema,
+    delete=profile_delete_schema,
 )
 class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve, update, or delete the authenticated user's profile.
@@ -187,6 +183,9 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
             )
 
 
+@extend_schema_view(
+    post=login_schema,
+)
 class LoginView(APIView):
     """Authenticates a user and start a session.
 
@@ -274,11 +273,7 @@ class LoginView(APIView):
 
 
 @extend_schema_view(
-    post=extend_schema(
-        summary="Logout user",
-        description="Logout the authenticated user",
-        tags=["Users"],
-    ),
+    post=logout_schema,
 )
 class LogoutView(APIView):
     """Logs out the authenticated user and ends the session."""
