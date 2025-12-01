@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "middlewares.request_id.RequestIdMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -92,7 +93,7 @@ DATABASES = {
         "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
         "HOST": os.getenv("POSTGRES_HOST"),
         "PORT": os.getenv("POSTGRES_PORT"),
-    }
+    },
 }
 
 
@@ -101,16 +102,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",  # noqa: E501
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",  # noqa: E501
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",  # noqa: E501
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",  # noqa: E501
     },
 ]
 
@@ -154,7 +155,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "OLX Clone API",
-    "DESCRIPTION": "API schema for OLX clone (versioned v1). All endpoints use session authentication.",
+    "DESCRIPTION": "API schema for OLX clone (versioned v1). All endpoints use session authentication.",  # noqa: E501
     "VERSION": "v1",
     "SERVE_INCLUDE_SCHEMA": False,
     "SECURITY": [{"sessionAuth": []}],
@@ -169,8 +170,13 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "[{asctime}] {levelname} [{name}:{lineno}] {message}",
+            "format": "[{asctime}] {levelname} [{name}:{lineno}] [request_id={request_id}] {message}",  # noqa: E501
             "style": "{",
+        },
+    },
+    "filters": {
+        "request_id": {
+            "()": "middlewares.request_logging.utils.logging_filters.RequestIDLogFilter",  # noqa: E501
         },
     },
     "handlers": {
@@ -181,6 +187,7 @@ LOGGING = {
             "backupCount": 5,
             "formatter": "verbose",
             "level": "INFO",
+            "filters": ["request_id"],
         },
         "app_error": {
             "class": "logging.handlers.RotatingFileHandler",
@@ -189,6 +196,7 @@ LOGGING = {
             "backupCount": 3,
             "formatter": "verbose",
             "level": "ERROR",
+            "filters": ["request_id"],
         },
         "app_debug": {
             "class": "logging.handlers.RotatingFileHandler",
@@ -197,6 +205,7 @@ LOGGING = {
             "backupCount": 5,
             "formatter": "verbose",
             "level": "DEBUG",
+            "filters": ["request_id"],
         },
     },
     "loggers": {
@@ -216,13 +225,12 @@ LOGGING = {
             "propagate": False,
         },
         "api": {
-            "handlers": ["app_debug", "app_info", "app_error"],
+            "handlers": ["app_debug"],
             "level": "DEBUG",
             "propagate": False,
         },
     },
 }
-
 # Cloudinary configuration
 CLOUDINARY_STORAGE = {
     "CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME"),
