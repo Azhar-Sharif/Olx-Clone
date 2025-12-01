@@ -1,13 +1,23 @@
+"""Utility helpers for standardized API responses.
+
+Provides a single api_response function to wrap all DRF responses in a
+consistent structure across the project.
+"""
+
 from rest_framework import status
 from rest_framework.response import Response
 
 
 def api_response(
-    success, message=None, data=None, errors=None, status_code=None
+    success,
+    message=None,
+    data=None,
+    errors=None,
+    status_code=None,
 ):
     """Return a DRF Response with a unified structure.
 
-    Structure:
+    The JSON payload has the form:
     {
         "success": bool,
         "message": str or null,
@@ -15,8 +25,9 @@ def api_response(
         "errors": dict|list|null
     }
 
-    An explicit `status_code` can be provided (e.g. 201 for created). If not
-    provided, defaults to 200 for success and 400 for failures.
+    An explicit status_code can be provided
+    (for example, 201 for a created resource). If not provided,
+    the function defaults to 200 for success and 400 for failures.
     """
     payload = {"success": bool(success)}
     payload["message"] = (
