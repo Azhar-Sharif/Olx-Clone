@@ -1,4 +1,6 @@
 # core/utils/exception_handler.py
+
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.http import Http404
 from rest_framework import exceptions, status
 from rest_framework.response import Response
@@ -30,6 +32,7 @@ def handle_validation_error(detail, request=None):  # noqa: C901
             data=None,
             errors=detail,
         )
+
     if "Price must be zero or positive" in str(detail):
         return api_response(
             False,
@@ -38,6 +41,7 @@ def handle_validation_error(detail, request=None):  # noqa: C901
             errors=detail,
             status_code=status.HTTP_400_BAD_REQUEST,
         )
+
     if "Username and password are required" in str(detail):
         return api_response(
             False,
@@ -45,18 +49,24 @@ def handle_validation_error(detail, request=None):  # noqa: C901
             data=None,
             errors=detail,
         )
+
     if "already exists" in str(detail):
         return api_response(
-            False, ErrorMessages.USERNAME_TAKEN.value, data=None, errors=detail
+            False,
+            ErrorMessages.USERNAME_TAKEN.value,
+            data=None,
+            errors=detail,
         )
+
     missing_fields = []
     if isinstance(detail, dict):
         for field, errors_list in detail.items():
             for e in errors_list:
                 if "may not be blank" in str(
-                    e
+                    e,
                 ) or "This field is required" in str(e):
                     missing_fields.append(field)
+
     if missing_fields:
         return api_response(
             False,
@@ -66,7 +76,10 @@ def handle_validation_error(detail, request=None):  # noqa: C901
         )
 
     return api_response(
-        False, ErrorMessages.VALIDATION_ERROR.value, data=None, errors=detail
+        False,
+        ErrorMessages.VALIDATION_ERROR.value,
+        data=None,
+        errors=detail,
     )
 
 
@@ -86,9 +99,9 @@ def handle_404(exc, context):
 
     view = context.get("view", None)
     if view:
-        model_name = getattr(getattr(view, "queryset", None), "model", None)
-        if model_name:
-            model_name = model_name.__name__
+        model = getattr(getattr(view, "queryset", None), "model", None)
+        if model:
+            model_name = model.__name__
             mapping = {
                 "Order": ErrorMessages.ORDER_NOT_FOUND.value,
                 "Product": ErrorMessages.PRODUCT_NOT_FOUND.value,
@@ -111,8 +124,30 @@ def handle_404(exc, context):
     )
 
 
+def handle_permission_error(exc, request=None):
+    """Handle 403 / CSRF-like permission errors with logging."""
+    if request:
+        user = getattr(request, "user", None)
+        log_error(
+            f"PermissionDenied/CSRF: {str(exc)}",
+            extra={
+                "path": getattr(request, "path", None),
+                "method": getattr(request, "method", None),
+                "user_id": getattr(user, "id", None),
+            },
+        )
+
+    return api_response(
+        False,
+        ErrorMessages.PERMISSION_DENIED.value,
+        data=None,
+        errors={"detail": str(exc)},
+        status_code=status.HTTP_403_FORBIDDEN,
+    )
+
+
 def handle_api_exception(exc, response, request=None):
-    """Handle DRF APIException with logging."""
+    """Handle generic DRF APIException with logging."""
     detail = response.data if response else getattr(exc, "detail", str(exc))
     code = getattr(exc, "status_code", status.HTTP_400_BAD_REQUEST)
 
@@ -126,6 +161,18 @@ def handle_api_exception(exc, response, request=None):
                 "user_id": getattr(user, "id", None),
                 "status_code": code,
             },
+        )
+
+    if isinstance(
+        exc,
+        (exceptions.NotAuthenticated, exceptions.AuthenticationFailed),
+    ):
+        return api_response(
+            False,
+            ErrorMessages.AUTH_REQUIRED.value,
+            data=None,
+            errors=detail,
+            status_code=code,
         )
 
     payload = {
@@ -151,24 +198,8 @@ def handle_exceptions(exc, context):
     if isinstance(exc, Http404):
         return handle_404(exc, context)
 
-    if isinstance(exc, exceptions.PermissionDenied):
-        if request:
-            user = getattr(request, "user", None)
-            log_error(
-                f"PermissionDenied: {str(exc)}",
-                extra={
-                    "path": getattr(request, "path", None),
-                    "method": getattr(request, "method", None),
-                    "user_id": getattr(user, "id", None),
-                },
-            )
-        return api_response(
-            False,
-            ErrorMessages.PERMISSION_DENIED.value,
-            data=None,
-            errors={"detail": str(exc)},
-            status_code=status.HTTP_403_FORBIDDEN,
-        )
+    if isinstance(exc, (exceptions.PermissionDenied, DjangoPermissionDenied)):
+        return handle_permission_error(exc, request=request)
 
     if isinstance(exc, exceptions.APIException):
         return handle_api_exception(exc, response, request=request)
