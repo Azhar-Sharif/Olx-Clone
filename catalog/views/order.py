@@ -1,3 +1,10 @@
+"""Order API views.
+
+Exposes endpoints for listing, retrieving, creating, updating, and
+canceling orders for the authenticated owner using the api_response
+wrapper.
+"""
+
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import permissions, viewsets
 
@@ -27,7 +34,8 @@ from core.utils.response import api_response
     ),
     update=extend_schema(
         summary="Update order",
-        description="Update an existing order only shipping address allowed to update",
+        description="Update an existing order "
+        "only shipping address allowed to update",
         tags=["Orders"],
     ),
     partial_update=extend_schema(
@@ -37,28 +45,30 @@ from core.utils.response import api_response
     destroy=extend_schema(summary="Cancel order", tags=["Orders"]),
 )
 class OrderViewSet(viewsets.ModelViewSet):
-    """Order endpoints
+    """Provides CRUD endpoints for orders owned by the authenticated
+    user.
 
-    Endpoints allow the authenticated owner to place and view orders.
-
-    All responses use the unified `api_response` structure.
-    Authentication: SessionAuthentication
-    Permissions: Owner only
+    All responses use the unified api_response structure and access is
+    restricted to the order owner.
     """
 
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOnly]
 
     def get_queryset(self):
+        """Returns orders belonging to the current
+        authenticated user.
+        """
         log_debug(
-            "Fetching orders for user", extra={"user_id": self.request.user.id}
+            "Fetching orders for user",
+            extra={"user_id": self.request.user.id},
         )
         return Order.objects.filter(user=self.request.user).order_by(
-            "-order_date"
+            "-order_date",
         )
 
     def create(self, request, *args, **kwargs):
-        """Override create to return unified response structure."""
+        """Creates an order and return a wrapped API response."""
         response = super().create(request, *args, **kwargs)
         return api_response(
             True,
@@ -68,6 +78,9 @@ class OrderViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
+        """Saves a new order, recompute total, and log creation
+        details.
+        """
         try:
             order = serializer.save()
             order.recompute_total()

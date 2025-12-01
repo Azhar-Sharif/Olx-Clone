@@ -1,3 +1,8 @@
+"""Order serializers.
+
+Provides serialization and creation logic for orders and their products.
+"""
+
 from django.db import transaction
 from django.db.models import F
 from rest_framework import serializers
@@ -6,44 +11,25 @@ from catalog.models import Order, Product
 
 
 class OrderProductInputSerializer(serializers.Serializer):
+    """Validates product items included in an order request."""
+
     product_id = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all()
+        queryset=Product.objects.all(),
     )
     quantity = serializers.IntegerField(min_value=1)
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    """
-    Order serializer.
-
-    Request body example:
-    {
-        "shipping_address": "123 Main St",
-        "products_data": [
-            {
-                "product_id": 1,
-                "quantity": 2
-            },
-            {
-                "product_id": 3,
-                "quantity": 1
-            }
-        ]
-    }
-
-    Response (api_response wrapper) example:
-    {
-        "success": true,
-        "message": "Order placed successfully",
-        "data": { ... serialized order ... },
-        "errors": null
-    }
+    """Serializes order data and handle order creation with inventory
+    updates.
     """
 
     user = serializers.ReadOnlyField(source="user.username")
     products = serializers.JSONField(read_only=True)
     products_data = OrderProductInputSerializer(
-        many=True, write_only=True, help_text="List of products with quantity"
+        many=True,
+        write_only=True,
+        help_text="List of products with quantity",
     )
 
     class Meta:
@@ -68,6 +54,9 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        """Creates an order, validate stock, and update product
+        quantities.
+        """
         products_data = validated_data.pop("products_data")
         user = self.context["request"].user
 
@@ -81,8 +70,9 @@ class OrderSerializer(serializers.ModelSerializer):
                 if product.quantity < quantity:
                     raise serializers.ValidationError(
                         {
-                            f"Inventory check failed: The quantity requested for product {product.id} is not available."
-                        }
+                            f"Inventory check failed: The quantity requested "
+                            f"for product {product.id} is not available.",
+                        },
                     )
 
                 products_list.append(
@@ -91,11 +81,11 @@ class OrderSerializer(serializers.ModelSerializer):
                         "product_name": product.product_name,
                         "quantity": quantity,
                         "unit_price": str(product.price),
-                    }
+                    },
                 )
 
                 Product.objects.filter(pk=product.pk).update(
-                    quantity=F("quantity") - quantity
+                    quantity=F("quantity") - quantity,
                 )
 
             order = Order.objects.create(
