@@ -1,3 +1,9 @@
+"""Request ID middleware.
+
+Attachs a unique request ID to each incoming HTTP request and
+response and expose it to the logging system via a context variable.
+"""
+
 import logging
 import uuid
 
@@ -12,7 +18,9 @@ class RequestIdMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-
+        """Assigns or propagates a request ID and handle
+        uncaught errors.
+        """
         incoming_id = request.headers.get("X-Request-Id")
         request_id = incoming_id or str(uuid.uuid4())
 
