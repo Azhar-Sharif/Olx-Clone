@@ -1,3 +1,9 @@
+"""User API views.
+
+Expose endpoints for user registration, authentication, profile
+management, and logout.
+"""
+
 import logging
 
 from django.contrib.auth import authenticate, login, logout
@@ -25,27 +31,14 @@ logger = logging.getLogger(__name__)
         summary="Register user",
         description="Create a new user account",
         tags=["Users"],
-    )
+    ),
 )
 class UserCreateView(generics.CreateAPIView):
-    """Register a new user.
+    """Creates a new user account.
 
-    Request body (example):
-    {
-      "username": "johndoe",
-      "email": "john@example.com",
-      "password": "secret123",
-      "first_name": "John",
-      "last_name": "Doe"
-    }
-
-    Success response (api_response wrapper) example:
-    {
-      "success": true,
-      "message": "User created successfully.",
-      "data": { ...user fields... },
-      "errors": null
-    }
+    This endpoint validates the registration payload, creates a user,
+    and returns the serialized user data wrapped in the costume
+    api_response format.
     """
 
     queryset = User.objects.all()
@@ -53,6 +46,9 @@ class UserCreateView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
     def create(self, request, *args, **kwargs):
+        """Creates a user, logs the payload, and wraps the response in
+        costume api_response format."""
+
         log_debug(
             "User registration payload",
             extra={
@@ -60,7 +56,7 @@ class UserCreateView(generics.CreateAPIView):
                     k: v
                     for k, v in request.data.items()
                     if k.lower() not in ("password",)
-                }
+                },
             },
         )
         response = super().create(request, *args, **kwargs)
@@ -88,19 +84,23 @@ class UserCreateView(generics.CreateAPIView):
     delete=extend_schema(summary="Delete account", tags=["Users"]),
 )
 class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Authenticated user can view, update, or delete their own profile.
+    """Retrieve, update, or delete the authenticated user's profile.
 
-    Responses are wrapped in the `api_response` structure.
+    This view operates on the current request.user and wraps all
+    responses in the costume api_response format, including validation
+    and permission errors.
     """
 
     serializer_class = UserProfileUpdateSerializer
 
     def get_object(self):
+        """Returns the authenticated user as the profile object."""
         return self.request.user
 
     def update(self, request, *args, **kwargs):
-        """Full update (PUT) for the authenticated user's profile."""
+        """Updates the authenticated user's profile and handles common
+        errors."""
+
         try:
             response = super().update(request, *args, **kwargs)
             log_info("Profile updated", extra={"user_id": request.user.id})
@@ -151,7 +151,9 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
             )
 
     def destroy(self, request, *args, **kwargs):
-        """Delete the authenticated user's profile."""
+        """Deletes the authenticated user's profile and handles common
+        errors."""
+
         try:
             user_id = request.user.id
             super().destroy(request, *args, **kwargs)
@@ -186,27 +188,19 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class LoginView(APIView):
-    """Login endpoint
+    """Authenticates a user and start a session.
 
-    Request example:
-    {
-      "username": "johndoe",
-      "password": "secret123"
-    }
-
-    Success response example:
-    {
-      "success": true,
-      "message": "User logged in successfully.",
-      "data": {"id": 1, "username": "johndoe"},
-      "errors": null
-    }
+    This endpoint validates credentials, authenticates the user, logs
+    them in,and returns basic user data in the costume api_response
+    format.
     """
 
     permission_classes = [permissions.AllowAny]
     serializer_class = LoginSerializer
 
     def post(self, request):
+        """Validates credentials, authenticates the user, and logs them
+        in."""
         client_ip = request.META.get("REMOTE_ADDR", "Unknown")
         serializer = LoginSerializer(data=request.data)
 
@@ -255,7 +249,10 @@ class LoginView(APIView):
 
         user = authenticate(request, username=username, password=password)
         if user is None:
-            log_warning_msg = f"Failed login attempt for '{username}' from IP {client_ip} - Invalid credentials"
+            log_warning_msg = (
+                f"Failed login attempt for '{username}' from IP {client_ip} "
+                f"- Invalid credentials"
+            )
             log_error(log_warning_msg)
             return api_response(
                 success=False,
@@ -281,14 +278,19 @@ class LoginView(APIView):
         summary="Logout user",
         description="Logout the authenticated user",
         tags=["Users"],
-    )
+    ),
 )
 class LogoutView(APIView):
+    """Logs out the authenticated user and ends the session."""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        """Logs out the current user and returns a success response."""
         logout(request)
         log_info("User logged out", extra={"user_id": request.user.id})
         return api_response(
-            True, message=SuccessMessages.USER_LOGGED_OUT.value, data=None
+            True,
+            message=SuccessMessages.USER_LOGGED_OUT.value,
+            data=None,
         )
