@@ -1,3 +1,9 @@
+"""Management command to seed initial development data.
+
+This command can seed users, catalog data, or all supported models
+to help set up a development environment.
+"""
+
 import logging
 
 from django.conf import settings
@@ -10,7 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = "Seed initial data for development: users, catalog, all"
+    """Seeds initial data for development."""
+
+    help = (  # noqa: A003
+        "Seed initial data for development: users, catalog, all"
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(

@@ -1,3 +1,8 @@
+"""Utility functions for seeding users, catalog data, and orders.
+
+These helpers create fake data for development and testing using Faker.
+"""
+
 import random
 
 from faker import Faker
@@ -8,6 +13,7 @@ faker = Faker()
 
 
 def seed_users(number=10):
+    """Seeds a set of regular user accounts if none exist yet."""
     from users.models import User
 
     if User.objects.filter(role="USER").exists():
@@ -25,7 +31,7 @@ def seed_users(number=10):
                 role="USER",
                 phone_no=faker.phone_number(),
                 address=faker.address(),
-            )
+            ),
         )
 
     User.objects.bulk_create(users)
@@ -33,6 +39,9 @@ def seed_users(number=10):
 
 
 def seed_catalog(number=10):
+    """Seeds categories, products, and orders
+    if they do not yet exist.
+    """
     from catalog.models import Category, Order, Product
     from users.models import User
 
@@ -42,7 +51,7 @@ def seed_catalog(number=10):
         log_info("Seeding categories...")
         categories = ["Electronics", "Books", "Clothing", "Toys", "Sports"]
         Category.objects.bulk_create(
-            [Category(category_name=c) for c in categories]
+            [Category(category_name=c) for c in categories],
         )
         log_info("Categories seeded!")
     else:
@@ -63,7 +72,7 @@ def seed_catalog(number=10):
                     quantity=faker.random_int(min=1, max=50),
                     category=random.choice(categories),
                     user=random.choice(users) if users else None,
-                )
+                ),
             )
 
         Product.objects.bulk_create(products)
