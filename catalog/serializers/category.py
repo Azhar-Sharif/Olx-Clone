@@ -4,22 +4,7 @@ from catalog.models.category import Category
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """
-    Category serializer.
-
-    Response (api_response wrapper) example:
-    {
-        "success": true,
-        "message": "Category listed successfully",
-        "data": [
-            {
-                "id": 1,
-                "category_name": "Electronics"
-            }
-        ],
-        "errors": null
-    }
-    """
+    """Serializes category data for list and detail endpoints."""
 
     class Meta:
         model = Category

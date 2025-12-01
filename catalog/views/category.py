@@ -1,3 +1,9 @@
+"""
+Catalog category API views.
+
+Provides list and detail endpoints for categories
+with a costume api_response."""
+
 from rest_framework import generics, permissions
 
 from catalog.models.category import Category
@@ -7,29 +13,14 @@ from core.utils.response import api_response
 
 
 class CategoryListView(generics.ListAPIView):
-    """
-    List all categories.
-
-    Authentication: Not required
-    Permissions: Public
-
-    Response example:
-    {
-        "success": true,
-        "message": "Categories retrieved successfully",
-        "data": [
-            {"id": 1, "category_name": "Electronics"},
-            {"id": 2, "category_name": "Books"}
-        ],
-        "errors": null
-    }
-    """
+    """Lists all categories."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):  # noqa: A003
+        """Returns a costume API response with the category list."""
         response = super().list(request, *args, **kwargs)
         return api_response(
             True,
@@ -39,26 +30,14 @@ class CategoryListView(generics.ListAPIView):
 
 
 class CategoryDetailView(generics.RetrieveAPIView):
-    """
-    Retrieve a category by ID.
-
-    Authentication: Not required
-    Permissions: Public
-
-    Response example:
-    {
-        "success": true,
-        "message": "Category retrieved successfully",
-        "data": {"id": 1, "category_name": "Electronics"},
-        "errors": null
-    }
-    """
+    """Retrieves a single category by its identifier."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
 
     def retrieve(self, request, *args, **kwargs):
+        """Returns a costume API response with the category details."""
         response = super().retrieve(request, *args, **kwargs)
         return api_response(
             True,
