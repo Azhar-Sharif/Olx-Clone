@@ -5,7 +5,8 @@ from users.manager import UserManager
 
 
 class User(AbstractUser):
-    # [fixme] put me somewhere in utils/constants.py
+    """Custom user model with role, phone number, and address fields."""
+
     ROLE_Choices = (
         ("USER", "User"),
         ("ADMIN", "Admin"),
