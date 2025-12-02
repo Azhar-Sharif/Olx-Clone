@@ -4,14 +4,20 @@ Catalog category API views.
 Provides list and detail endpoints for categories
 with a costume api_response."""
 
+from drf_spectacular.utils import extend_schema_view
 from rest_framework import generics, permissions
 
 from catalog.models.category import Category
 from catalog.serializers import CategorySerializer
 from core.utils.enums import SuccessMessages
 from core.utils.response import api_response
+from docs.catalog.docs_category import (
+    category_detail_schema,
+    category_list_schema,
+)
 
 
+@extend_schema_view(get=category_list_schema)
 class CategoryListView(generics.ListAPIView):
     """Lists all categories."""
 
@@ -29,6 +35,7 @@ class CategoryListView(generics.ListAPIView):
         )
 
 
+@extend_schema_view(get=category_detail_schema)
 class CategoryDetailView(generics.RetrieveAPIView):
     """Retrieves a single category by its identifier."""
 
