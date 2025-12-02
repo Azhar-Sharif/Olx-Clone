@@ -96,3 +96,11 @@ class OrderSerializer(serializers.ModelSerializer):
             order.recompute_total()
 
         return order
+
+    def validate_products_data(self, value):
+
+        if self.instance is not None:
+            raise serializers.ValidationError(
+                "products_data cannot be changed once the order is created.",
+            )
+        return value

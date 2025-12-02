@@ -5,7 +5,7 @@ canceling orders for the authenticated owner using the api_response
 wrapper.
 """
 
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema_view
 from rest_framework import permissions, viewsets
 
 from catalog.models import Order
@@ -14,35 +14,23 @@ from catalog.serializers import OrderSerializer
 from core.utils.enums import SuccessMessages
 from core.utils.logger import log_debug, log_error, log_info
 from core.utils.response import api_response
+from docs.catalog.docs_orders import (
+    order_create_schema,
+    order_destroy_schema,
+    order_list_schema,
+    order_partial_update_schema,
+    order_retrieve_schema,
+    order_update_schema,
+)
 
 
 @extend_schema_view(
-    list=extend_schema(
-        summary="List orders",
-        description="List orders for the owner of that order",
-        tags=["Orders"],
-    ),
-    retrieve=extend_schema(
-        summary="Retrieve order",
-        description="Get order details by id",
-        tags=["Orders"],
-    ),
-    create=extend_schema(
-        summary="Create order",
-        description="Place a new order",
-        tags=["Orders"],
-    ),
-    update=extend_schema(
-        summary="Update order",
-        description="Update an existing order "
-        "only shipping address allowed to update",
-        tags=["Orders"],
-    ),
-    partial_update=extend_schema(
-        summary="Partial update order only shipping address allowed to change",
-        tags=["Orders"],
-    ),
-    destroy=extend_schema(summary="Cancel order", tags=["Orders"]),
+    list=order_list_schema,
+    retrieve=order_retrieve_schema,
+    create=order_create_schema,
+    update=order_update_schema,
+    partial_update=order_partial_update_schema,
+    destroy=order_destroy_schema,
 )
 class OrderViewSet(viewsets.ModelViewSet):
     """Provides CRUD endpoints for orders owned by the authenticated
