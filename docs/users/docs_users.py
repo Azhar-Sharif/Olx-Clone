@@ -1,5 +1,3 @@
-# docs/users/docs_users.py
-
 from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiResponse,

@@ -1,5 +1,3 @@
-# docs/users/utils/examples.py
-
 user_data_example = {
     "id": 1,
     "username": "alice",
