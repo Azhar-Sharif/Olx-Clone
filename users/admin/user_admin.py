@@ -23,7 +23,7 @@ class CustomUserAdmin(UserAdmin):
                     "email",
                     "phone_no",
                     "address",
-                )
+                ),
             },
         ),
         (
@@ -36,7 +36,7 @@ class CustomUserAdmin(UserAdmin):
                     "is_superuser",
                     "groups",
                     "user_permissions",
-                )
+                ),
             },
         ),
         ("Important Dates", {"fields": ("last_login", "date_joined")}),

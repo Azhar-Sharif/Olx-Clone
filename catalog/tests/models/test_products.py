@@ -87,7 +87,9 @@ class TestProductModel:
 
         with freeze_time("2025-01-01 10:00:00"):
             ProductFactory(
-                product_name="Pen", price=Decimal("1.00"), category=category
+                product_name="Pen",
+                price=Decimal("1.00"),
+                category=category,
             )
         with freeze_time("2025-01-01 10:00:01"):
             ProductFactory(

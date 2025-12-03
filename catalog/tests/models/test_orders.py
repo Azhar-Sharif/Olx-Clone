@@ -25,11 +25,13 @@ class TestOrderModel:
         product_id = faker.pyint(min_value=1, max_value=10_000)
         quantity = faker.pyint(min_value=1, max_value=10)
         unit_price = Decimal(
-            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True))
+            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True)),
         )
 
         order.add_product(
-            product_id=product_id, quantity=quantity, unit_price=unit_price
+            product_id=product_id,
+            quantity=quantity,
+            unit_price=unit_price,
         )
 
         assert len(order.products) == 1
@@ -46,14 +48,18 @@ class TestOrderModel:
         q1 = faker.pyint(min_value=1, max_value=5)
         q2 = faker.pyint(min_value=1, max_value=5)
         unit_price = Decimal(
-            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True))
+            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True)),
         )
 
         order.add_product(
-            product_id=product_id, quantity=q1, unit_price=unit_price
+            product_id=product_id,
+            quantity=q1,
+            unit_price=unit_price,
         )
         order.add_product(
-            product_id=product_id, quantity=q2, unit_price=unit_price
+            product_id=product_id,
+            quantity=q2,
+            unit_price=unit_price,
         )
 
         assert len(order.products) == 1
@@ -66,10 +72,10 @@ class TestOrderModel:
         order = OrderFactory()
 
         p1_price = Decimal(
-            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True))
+            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True)),
         )
         p2_price = Decimal(
-            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True))
+            str(faker.pydecimal(left_digits=3, right_digits=2, positive=True)),
         )
         p1_qty = faker.pyint(min_value=1, max_value=5)
         p2_qty = faker.pyint(min_value=1, max_value=5)

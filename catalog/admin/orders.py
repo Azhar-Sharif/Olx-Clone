@@ -21,9 +21,12 @@ class OrderAdmin(admin.ModelAdmin):
     def products_display(self, obj):
         if not getattr(obj, "products", None):
             return "(no products)"
-        return "\n".join(
-            f"Product ID: {it.get('product_id')} | Qty: {it.get('quantity')} | Price: {it.get('unit_price')}"
-            for it in obj.products
-        )
+        lines = []
+        for it in obj.products:
+            pid = it.get("product_id")
+            qty = it.get("quantity")
+            price = it.get("unit_price")
+            lines.append(f"Product ID: {pid} | Qty: {qty} | Price: {price}")
+        return "\n".join(lines)
 
     products_display.short_description = "Products"
