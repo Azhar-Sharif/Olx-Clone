@@ -14,8 +14,12 @@ from docs.catalog.utils.examples_orders import (
     order_list_empty_success_example,
     order_list_success_example,
     order_not_found_example,
+    order_partial_update_request_example,
+    order_partial_update_success_example,
     order_permission_denied_example,
     order_server_error_example,
+    order_update_request_example,
+    order_update_success_example,
     order_validation_error_example,
 )
 
@@ -347,5 +351,146 @@ order_destroy_schema = extend_schema(
             ],
         ),
     },
+    tags=["Orders"],
+)
+
+
+order_update_schema = extend_schema(
+    summary="Update order",
+    description="Update an existing order (only shipping address allowed).",
+    request=OrderSerializer,
+    responses={
+        200: OpenApiResponse(
+            description="Order updated successfully.",
+            examples=[
+                OpenApiExample(
+                    "Order Updated",
+                    value=order_update_success_example,
+                ),
+            ],
+        ),
+        400: OpenApiResponse(
+            description="Validation error.",
+            examples=[
+                OpenApiExample(
+                    "Validation Error",
+                    value=order_validation_error_example,
+                ),
+            ],
+        ),
+        401: OpenApiResponse(
+            description="Authentication required.",
+            examples=[
+                OpenApiExample(
+                    "Not authenticated",
+                    value=order_auth_required_example,
+                ),
+            ],
+        ),
+        403: OpenApiResponse(
+            description="Permission denied.",
+            examples=[
+                OpenApiExample(
+                    "Forbidden",
+                    value=order_permission_denied_example,
+                ),
+            ],
+        ),
+        404: OpenApiResponse(
+            description="Order not found.",
+            examples=[
+                OpenApiExample(
+                    "Order Not Found",
+                    value=order_not_found_example,
+                ),
+            ],
+        ),
+        500: OpenApiResponse(
+            description="Internal server error.",
+            examples=[
+                OpenApiExample(
+                    "Server error",
+                    value=order_server_error_example,
+                ),
+            ],
+        ),
+    },
+    examples=[
+        OpenApiExample(
+            "Update Order Request",
+            value=order_update_request_example,
+        ),
+    ],
+    tags=["Orders"],
+)
+
+order_partial_update_schema = extend_schema(
+    summary="Partial update order",
+    description=(
+        "Partially update an existing order " "only shipping address allowed)."
+    ),
+    request=OrderSerializer,
+    responses={
+        200: OpenApiResponse(
+            description="Order updated successfully.",
+            examples=[
+                OpenApiExample(
+                    "Order Partially Updated",
+                    value=order_partial_update_success_example,
+                ),
+            ],
+        ),
+        400: OpenApiResponse(
+            description="Validation error.",
+            examples=[
+                OpenApiExample(
+                    "Validation Error",
+                    value=order_validation_error_example,
+                ),
+            ],
+        ),
+        401: OpenApiResponse(
+            description="Authentication required.",
+            examples=[
+                OpenApiExample(
+                    "Not authenticated",
+                    value=order_auth_required_example,
+                ),
+            ],
+        ),
+        403: OpenApiResponse(
+            description="Permission denied.",
+            examples=[
+                OpenApiExample(
+                    "Forbidden",
+                    value=order_permission_denied_example,
+                ),
+            ],
+        ),
+        404: OpenApiResponse(
+            description="Order not found.",
+            examples=[
+                OpenApiExample(
+                    "Order Not Found",
+                    value=order_not_found_example,
+                ),
+            ],
+        ),
+        500: OpenApiResponse(
+            description="Internal server error.",
+            examples=[
+                OpenApiExample(
+                    "Server error",
+                    value=order_server_error_example,
+                ),
+            ],
+        ),
+    },
+    examples=[
+        OpenApiExample(
+            "Partial Update Order Request",
+            value=order_partial_update_request_example,
+        ),
+    ],
     tags=["Orders"],
 )

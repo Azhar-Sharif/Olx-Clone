@@ -61,6 +61,45 @@ order_create_success_example = {
     "data": order_detail_success_example["data"],
     "errors": None,
 }
+
+
+order_update_request_example = {
+    "shipping_address": "456 New Street",
+}
+
+order_update_success_example = {
+    "success": True,
+    "message": "OK",
+    "data": {
+        "id": 1,
+        "user": "alice",
+        "order_date": "2025-01-01T12:00:00Z",
+        "products": order_products_example,
+        "total_amount": "2999.98",
+        "shipping_address": "456 New Street",
+        "order_status": "PLACED",
+    },
+    "errors": None,
+}
+
+order_partial_update_request_example = {
+    "shipping_address": "456 New Street",
+}
+
+order_partial_update_success_example = {
+    "success": True,
+    "message": "OK",
+    "data": {
+        "id": 1,
+        "user": "alice",
+        "order_date": "2025-01-01T12:00:00Z",
+        "products": order_products_example,
+        "total_amount": "2999.98",
+        "shipping_address": "456 New Street",
+        "order_status": "PLACED",
+    },
+    "errors": None,
+}
 order_inventory_error_example = {
     "success": False,
     "message": "Requested quantity for one or more products is not available.",
