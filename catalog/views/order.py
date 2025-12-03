@@ -47,10 +47,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         """Returns orders belonging to the current
         authenticated user.
         """
-        log_debug(
-            "Fetching orders for user",
-            extra={"user_id": self.request.user.id},
-        )
         return Order.objects.filter(user=self.request.user).order_by(
             "-order_date",
         )
