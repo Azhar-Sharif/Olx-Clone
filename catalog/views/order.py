@@ -6,13 +6,13 @@ wrapper.
 """
 
 from drf_spectacular.utils import extend_schema_view
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, status, viewsets
 
 from catalog.models import Order
 from catalog.permissions import IsOwnerOnly
 from catalog.serializers import OrderSerializer
 from core.utils.enums import SuccessMessages
-from core.utils.logger import log_debug, log_error, log_info
+from core.utils.logger import log_debug, log_info
 from core.utils.response import api_response
 from docs.catalog.docs_orders import (
     order_create_schema,
@@ -55,8 +55,35 @@ class OrderViewSet(viewsets.ModelViewSet):
             "-order_date",
         )
 
+    def list(self, request, *args, **kwargs):  # noqa: A003
+        """List orders and wrap response in api_response."""
+        log_info("Order list called", extra={"user_id": request.user.id})
+        response = super().list(request, *args, **kwargs)
+        return api_response(
+            True,
+            message=SuccessMessages.ORDERS_LISTED.value,
+            data=response.data,
+            status_code=response.status_code,
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        """Retrieve order details and wrap response in api_response."""
+        log_info("Order retrieve called", extra={"user_id": request.user.id})
+        response = super().retrieve(request, *args, **kwargs)
+        return api_response(
+            True,
+            message=SuccessMessages.ORDER_RETRIEVED.value,
+            data=response.data,
+            status_code=response.status_code,
+        )
+
     def create(self, request, *args, **kwargs):
         """Creates an order and return a wrapped API response."""
+        log_info("Order create called", extra={"user_id": request.user.id})
+        log_debug(
+            "Order create payload",
+            extra={"data": request.data},
+        )
         response = super().create(request, *args, **kwargs)
         return api_response(
             True,
@@ -65,18 +92,43 @@ class OrderViewSet(viewsets.ModelViewSet):
             status_code=response.status_code,
         )
 
-    def perform_create(self, serializer):
-        """Saves a new order, recompute total, and log creation
-        details.
-        """
-        try:
-            order = serializer.save()
-            order.recompute_total()
-            log_info(
-                "Order created",
-                extra={"order_id": order.id, "user_id": self.request.user.id},
-            )
-            return order
-        except Exception as exc:
-            log_error("Failed to create order", extra={"error": str(exc)})
-            raise
+    def update(self, request, *args, **kwargs):
+        """Update an order's shipping address and wrap response."""
+        log_info("Order update called", extra={"user_id": request.user.id})
+        response = super().update(request, *args, **kwargs)
+        log_info(
+            "Order updated",
+            extra={
+                "order_id": response.data.get("id"),
+                "user_id": request.user.id,
+            },
+        )
+        return api_response(
+            True,
+            message=SuccessMessages.ORDER_UPDATED.value,
+            data=response.data,
+            status_code=response.status_code,
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        """Cancel (delete) an order and wrap response."""
+        order = self.get_object()
+        order_id = order.id
+        user_id = request.user.id
+        log_info(
+            "Order delete called",
+            extra={"order_id": order_id, "user_id": user_id},
+        )
+
+        super().destroy(request, *args, **kwargs)
+
+        log_info(
+            "Order deleted",
+            extra={"order_id": order_id, "user_id": user_id},
+        )
+        return api_response(
+            True,
+            message=SuccessMessages.ORDER_CANCELLED.value,
+            data=None,
+            status_code=status.HTTP_200_OK,
+        )

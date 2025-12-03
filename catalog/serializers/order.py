@@ -29,6 +29,7 @@ class OrderSerializer(serializers.ModelSerializer):
     products_data = OrderProductInputSerializer(
         many=True,
         write_only=True,
+        required=False,
         help_text="List of products with quantity",
     )
 
@@ -97,10 +98,25 @@ class OrderSerializer(serializers.ModelSerializer):
 
         return order
 
-    def validate_products_data(self, value):
 
-        if self.instance is not None:
-            raise serializers.ValidationError(
-                "products_data cannot be changed once the order is created.",
-            )
-        return value
+def validate_products_data(self, value):
+    """Block changing products_data after order is created."""
+    if self.instance is not None:
+        raise serializers.ValidationError(
+            "products_data cannot be changed once the order is created.",
+        )
+    return value
+
+
+def validate(self, attrs):
+    """
+    On create: require products_data.
+    On update: do NOT require products_data (only shipping_address).
+    """
+
+    if self.instance is None and "products_data" not in attrs:
+        raise serializers.ValidationError(
+            {"products_data": ["This field is required."]},
+        )
+
+    return super().validate(attrs)
