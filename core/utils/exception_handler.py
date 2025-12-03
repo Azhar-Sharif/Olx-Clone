@@ -1,9 +1,6 @@
-# core/utils/exception_handler.py
-
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.http import Http404
 from rest_framework import exceptions, status
-from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
 from core.utils.enums import ErrorMessages
@@ -25,15 +22,18 @@ def handle_validation_error(detail, request=None):  # noqa: C901
             },
         )
 
-    if "Inventory check failed" in str(detail):
+    detail_str = str(detail)
+
+    if "Inventory check failed" in detail_str:
         return api_response(
             False,
             ErrorMessages.INVENTORY_NOT_AVAILABLE.value,
             data=None,
             errors=detail,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    if "Price must be zero or positive" in str(detail):
+    if "Price must be zero or positive" in detail_str:
         return api_response(
             False,
             ErrorMessages.VALIDATION_ERROR.value,
@@ -42,29 +42,35 @@ def handle_validation_error(detail, request=None):  # noqa: C901
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    if "Username and password are required" in str(detail):
+    if "Username and password are required" in detail_str:
         return api_response(
             False,
             ErrorMessages.INVALID_CREDENTIALS.value,
             data=None,
             errors=detail,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    if "already exists" in str(detail):
+    if "already exists" in detail_str:
         return api_response(
             False,
             ErrorMessages.USERNAME_TAKEN.value,
             data=None,
             errors=detail,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
 
     missing_fields = []
     if isinstance(detail, dict):
         for field, errors_list in detail.items():
+            if not isinstance(errors_list, (list, tuple)):
+                errors_list = [errors_list]
             for e in errors_list:
-                if "may not be blank" in str(
-                    e,
-                ) or "This field is required" in str(e):
+                e_str = str(e)
+                if (
+                    "may not be blank" in e_str
+                    or "This field is required" in e_str
+                ):
                     missing_fields.append(field)
 
     if missing_fields:
@@ -73,6 +79,7 @@ def handle_validation_error(detail, request=None):  # noqa: C901
             "The following fields are required",
             data=None,
             errors=detail,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
 
     return api_response(
@@ -80,6 +87,7 @@ def handle_validation_error(detail, request=None):  # noqa: C901
         ErrorMessages.VALIDATION_ERROR.value,
         data=None,
         errors=detail,
+        status_code=status.HTTP_400_BAD_REQUEST,
     )
 
 
@@ -118,9 +126,10 @@ def handle_404(exc, context):
 
     return api_response(
         False,
-        ErrorMessages.SERVER_ERROR.value,
+        ErrorMessages.NOT_FOUND.value,
         data=None,
         errors={"detail": "Not found."},
+        status_code=status.HTTP_404_NOT_FOUND,
     )
 
 
@@ -175,13 +184,13 @@ def handle_api_exception(exc, response, request=None):
             status_code=code,
         )
 
-    payload = {
-        "success": False,
-        "message": ErrorMessages.SERVER_ERROR.value,
-        "data": None,
-        "errors": detail,
-    }
-    return Response(payload, status=code)
+    return api_response(
+        False,
+        ErrorMessages.SERVER_ERROR.value,
+        data=None,
+        errors=detail,
+        status_code=code,
+    )
 
 
 def handle_exceptions(exc, context):
@@ -220,6 +229,7 @@ def handle_exceptions(exc, context):
             ErrorMessages.SERVER_ERROR.value,
             data=None,
             errors={"detail": "Server error."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
     if request:
@@ -238,5 +248,9 @@ def handle_exceptions(exc, context):
         ErrorMessages.SERVER_ERROR.value,
         data=None,
         errors=response.data,
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        status_code=getattr(
+            response,
+            "status_code",
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ),
     )

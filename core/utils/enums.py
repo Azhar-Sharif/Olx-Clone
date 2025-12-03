@@ -8,7 +8,10 @@ class SuccessMessages(Enum):
     PRODUCT_RETRIEVED = "Product retrieved successfully."
     PRODUCTS_LISTED = "Products listed successfully."
     OK = "OK"
-
+    ORDER_UPDATED = "Order updated successfully."
+    ORDER_DELETED = "Order deleted successfully."
+    ORDER_RETRIEVED = "Order retrieved successfully."
+    ORDERS_LISTED = "Orders listed successfully."
     ORDER_PLACED = "Order placed successfully."
     ORDER_CANCELLED = "Order cancelled successfully."
     ORDER_PAID = "Order marked as paid."
