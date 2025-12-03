@@ -2,9 +2,24 @@
 
 * We use **GitFlow**:
 
-  * `main` = production/stable
-  * `develop` = integration branch
-  * Features from `develop`: `feature/<name>`
+  * `production` = production/stable
+  * `development` = integration branch
+  * Features from `development`: `feature/<name>`
+
+## Django Settings & Environment
+
+* The project uses **modular settings** based on `DJANGO_ENV`:
+
+  * `DJANGO_ENV=local` → loads `core/settings/local.py` (DEBUG=True)
+  * `DJANGO_ENV=production` → loads `core/settings/production.py` (DEBUG=False, security hardening)
+
+* Environment-specific `.env` files:
+
+  * `.env.local` - Development credentials (safe to commit with placeholders)
+  * `.env.production` - Production credentials (NEVER commit)
+  * `.env.example` - Template for team
+
+* Set `DJANGO_ENV` in Docker, system environment, or `.env` file (defaults to `local`)
 
 ## Commits
 
@@ -29,9 +44,9 @@ pre-commit install --hook-type pre-push
 
   * Runs `make test-local` (pytest inside Docker)
   * Fails if tests fail or coverage <60%
-  * Ensures code pushed to `develop` meets minimum quality
+  * Ensures code pushed to `development` meets minimum quality
 
-> ✅ Notes: You do **not** need to activate a virtual environment; the hooks run tests inside Docker containers.
+Notes: You do **not** need to activate a virtual environment; the hooks run tests inside Docker containers.
 
 ## Tests
 
@@ -50,7 +65,7 @@ docker compose exec web pytest path/to/app
 
 ## Pull Requests
 
-* Open PRs **into `develop`**
+* Open PRs **into `development`**
 * **At least 1 review required**
 
 ## Docker (development)

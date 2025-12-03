@@ -1,17 +1,17 @@
-# 🛒 OLX Clone (Django)
+# OLX Clone (Django)
 
 A full-stack **Django**-based OLX clone where users can manage listings and perform CRUD operations on products and orders. Built with a modular structure, session-based auth, centralized logging, unified API responses, and auto-generated API documentation (drf-spectacular + Swagger).
 
 
-## 🚀 Project Overview
+## Project Overview
 
-This project replicates the core functionalities of **OLX**, allowing users to manage their listings, and perform CRUD operations on products.  
+This project replicates the core functionalities of **OLX**, allowing users to manage their listings, and perform CRUD operations on products.
 The system supports filtering, pagination, user profiles, and order management with a clean and modular Django architecture.
 
 
-## 🧩 Functionality
+## Functionality
 
-### 👤 User Capabilities
+### User Capabilities
 A user can:
 - **View all listed products**
 - **Filter / paginate products** (by name, price)
@@ -23,7 +23,7 @@ A user can:
 - **As a Buyer, confirm an order**
 
 
-## 📦 Current status
+## Current status
 
 - Apps: `users`, `catalog`, `core`
 - REST API implemented with serializers and viewsets for products and orders
@@ -34,7 +34,7 @@ A user can:
 - Tests with `pytest` and coverage; coverage enforcement can be scoped to models via `pytest.ini`
 
 
-## 🔧 API documentation
+## API documentation
 
 - Swagger UI: `http://<host>/api/docs/`
 - OpenAPI schema (JSON/YAML): `http://<host>/api/docs/schema/`
@@ -45,7 +45,7 @@ Notes:
 - All endpoints use API version `v1` in schema metadata.
 
 
-## 🧩 Unified responses
+## Unified responses
 
 All API responses follow the same structure returned by `core.utils.response.api_response()`:
 
@@ -59,7 +59,7 @@ All API responses follow the same structure returned by `core.utils.response.api
 This applies to normal responses and to errors returned by the custom exception handler in `core.utils.exception_handler`.
 
 
-## ☁️ Cloudinary (media storage)
+## Cloudinary (media storage)
 
 The project can use Cloudinary to store user-uploaded media (product images). Environment variables supported:
 - `CLOUDINARY_URL` (recommended) or
@@ -71,7 +71,7 @@ pip install cloudinary django-cloudinary-storage
 
 Django settings use `cloudinary_storage` when credentials are present.
 
-## 🧭 Logging
+## Logging
 
 Logs are stored in the `logs/` directory. Files created by default:
 - `app_info.log` — INFO and above (rotating, 5MB, 5 backups)
@@ -79,20 +79,48 @@ Logs are stored in the `logs/` directory. Files created by default:
 - `app_debug.log` — DEBUG (rotating, 5MB, 5 backups)
 
 Use the helper functions in `core.utils.logger`:
-- `log_info(message, extra=None)`
-- `log_error(message, extra=None)`
-- `log_debug(message, extra=None)`
+- `log_info(message, extra=None)` - logs to `app_info.log`
+- `log_error(message, extra=None)` - logs to `app_error.log`
+- `log_debug(message, extra=None)` - logs to `app_debug.log`
+
+Entrypoint logging (manage.py, wsgi.py, asgi.py) uses basic Python logging and outputs to both console and `app_info.log`.
+
+## Settings Configuration
+
+This project uses modular Django settings based on the environment:
+
+### Settings Structure
+- `core/settings/base.py` - Shared configuration for all environments
+- `core/settings/local.py` - Local development settings (DEBUG=True)
+- `core/settings/production.py` - Production settings (DEBUG=False, security hardening)
+
+### Dynamic Environment Loading
+
+The Django settings module is dynamically selected based on the `DJANGO_ENV` variable:
+
+```python
+DJANGO_ENV=local
+DJANGO_ENV=production
+```
+
+### Environment-Specific .env Files
+
+- `.env.local` - Local development credentials (tracked with safe defaults)
+- `.env.production` - Production credentials (DO NOT commit sensitive data)
+- `.env.example` - Template for team members
+
+The system automatically loads `.env.{DJANGO_ENV}` or falls back to `.env.local`.
 
 
-## ⚙️ Requirements
+## Requirements
 
 - Python **3.12+**
 - Django **5.x**
 - PostgreSQL **16+** (SQLite is included for quick local testing)
 - Docker & Docker Compose
-- GitFlow branching model
+- GitFlow branching model (branches: `production`, `development`)
 
-### 🧰 Python Dependencies
+### Python Dependencies
 - `django`
 - `djangorestframework`
 - `drf-spectacular`
@@ -106,18 +134,25 @@ Use the helper functions in `core.utils.logger`:
 - `cloudinary`
 
 
-## 🚀 Quick start (development)
+## Quick start (development)
 
-### 1️⃣ Clone the Repository
+### Clone the Repository
 
 ```bash
 git clone git@github.com:Azhar-Sharif/Olx-Clone.git
 cd Olx-Clone
 ```
+## Branching Model
 
----
+This project uses the following branches:
 
-### 2️⃣ Environment Variables
+- `production`: stable release branch
+- `development`: active development branch
+
+Feature branches should be based on `development` and merged back via pull requests.
+
+
+### Environment Variables
 
 * Copy `.env.example` to `.env.local` for local development:
 
@@ -127,9 +162,8 @@ cp .env.example .env.local
 
 * Edit `.env.local` and fill in your local credentials, e.g., database and Django secret key.
 
----
 
-### 3️⃣ Docker Compose Local Setup
+### Docker Compose Local Setup
 
 **Start containers:**
 
@@ -152,19 +186,13 @@ make docker-local-down
 make docker-local-build
 ```
 
----
-
-Here’s the updated README snippet with the **superuser creation step** added under the Docker Compose workflow, keeping everything else intact and reflecting your current setup:
-
----
-
-### 4️⃣ Database Setup
+### Database Setup
 
 **Run migrations:**
 
 ```bash
-make db-makemigrations-local 
-make db-migrate-local          
+make db-makemigrations-local
+make db-migrate-local
 ```
 
 **Create superuser:**
@@ -186,19 +214,18 @@ make seed-all-local APP=users
 make seed-all-local APP=catalog
 ```
 
-### 5️⃣ Running the Server
+### Running the Server
 
 ```bash
-docker compose -f docker/docker-compose.local.yml exec web python manage.py runserver 0.0.0.0:8000
+make docker-local-up
 ```
 
 * Server URL: `http://localhost:8000/`
 * Swagger UI: `http://localhost:8000/api/docs/`
 * OpenAPI schema: `http://localhost:8000/api/docs/schema/`
 
----
 
-### 6️⃣ Running Tests
+### Running Tests
 
 Run tests **inside Docker**:
 
@@ -209,9 +236,8 @@ make test-local
 * Tests run with coverage enforced via `pytest.ini`.
 * Exit code propagates → used in pre-commit and pre-push hooks.
 
----
 
-### 7️⃣ Pre-commit & Pre-push Hooks
+### Pre-commit & Pre-push Hooks
 
 The project uses **pre-commit hooks** to enforce code quality and test coverage:
 
@@ -233,17 +259,15 @@ pre-commit install
 pre-commit install --hook-type pre-push
 ```
 
----
 
-### 8️⃣ Environment Variables Reference
+### Environment Variables Reference
 
 `.env.example` contains all the required variables for development:
 
 ```env
 # Django settings
-DJANGO_SECRET_KEY=<your-secret-key>
-DEBUG=True
-DJANGO_ENV=development
+DJANGO_ENV=local
+SECRET_KEY=<your-secret-key>
 
 # Database
 POSTGRES_DB=your_db_username
@@ -253,15 +277,16 @@ POSTGRES_HOST=db
 POSTGRES_PORT=5432
 
 # Cloudinary (optional for media)
-CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
+CLOUDINARY_CLOUD_NAME=<your-cloud-name>
+CLOUDINARY_API_KEY=<your-api-key>
+CLOUDINARY_API_SECRET=<your-api-secret>
 ```
 
 * Copy to `.env.local` for local development.
 * The Docker Compose setup automatically uses `.env.local` for container environment variables.
 
----
 
-## ⚙ What the Seeder Does
+## What the Seeder Does
 
 * Creates:
 
@@ -271,8 +296,6 @@ CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
   * Orders with nested product lists
   * Recomputes order totals automatically.
 * Uses **Faker** instead of `django-seed`.
-
----
 
 
 ## Contributing

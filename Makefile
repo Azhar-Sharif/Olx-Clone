@@ -1,17 +1,20 @@
 COMPOSE_LOCAL := docker/docker-compose.local.yml
+COMPOSE_PROD  := docker/docker-compose.production.yml
 
-.PHONY: help docker-local-build docker-local-up docker-local-down \
-		db-migrate-local db-makemigrations-local seed-all-local test-local
-
+.PHONY: help all clean test \
+	docker-local-build docker-local-up docker-local-down \
+	db-migrate-local db-makemigrations-local seed-all-local test-local \
+	docker-prod-build docker-prod-up docker-prod-down \
+	db-migrate-prod db-makemigrations-prod test-prod
 
 help:
-	@echo "Usage:"
-	@echo "  make docker-local-up              - Start local dev containers"
-	@echo "  make docker-local-down            - Stop local dev containers"
-	@echo "  make db-makemigrations-local      - Create migrations (local)"
-	@echo "  make db-migrate-local             - Run migrations (local)"
-	@echo "  make seed-all-local               - Seed mock data (local)"
-	@echo "  make test-local           - Run all tests with coverage inside Docker"
+	@echo "Usage: make <target>"
+	@echo "Common: docker-local-up, docker-local-down, docker-local-build"
+	@echo "DB: db-makemigrations-local, db-migrate-local"
+	@echo "Tests: test-local, test-prod"
+	@echo "See README.md for full docs"
+
+
 docker-local-build:
 	docker compose -f $(COMPOSE_LOCAL) build --no-cache
 
@@ -20,7 +23,6 @@ docker-local-up:
 
 docker-local-down:
 	docker compose -f $(COMPOSE_LOCAL) down
-
 
 db-migrate-local:
 	docker compose -f $(COMPOSE_LOCAL) exec -T web python manage.py migrate --noinput
@@ -33,3 +35,21 @@ seed-all-local:
 
 test-local:
 	docker compose -f $(COMPOSE_LOCAL) run --rm -T web pytest
+
+docker-prod-build:
+	docker compose -f $(COMPOSE_PROD) build --no-cache
+
+docker-prod-up:
+	docker compose -f $(COMPOSE_PROD) up -d
+
+docker-prod-down:
+	docker compose -f $(COMPOSE_PROD) down
+
+db-migrate-prod:
+	docker compose -f $(COMPOSE_PROD) exec -T web python manage.py migrate --noinput
+
+db-makemigrations-prod:
+	docker compose -f $(COMPOSE_PROD) exec -T web python manage.py makemigrations
+
+test-prod:
+	docker compose -f $(COMPOSE_PROD) run --rm -T web pytest
