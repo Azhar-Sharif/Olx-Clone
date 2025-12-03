@@ -1,19 +1,18 @@
 exclude: '^(.*/)?(migrations|staticfiles|static|media|mediafiles|logs|__pycache__|\.venv|venv|env)/.*|manage\.py$'
 
 repos:
-  # Step 1: Import sorting
+
   - repo: https://github.com/PyCQA/isort
     rev: 7.0.0
     hooks:
       - id: isort
 
-  # Step 2: Code formatting
   - repo: https://github.com/psf/black-pre-commit-mirror
     rev: 25.11.0
     hooks:
       - id: black
 
-  # Step 3: Compatibility fixes
+
   - repo: https://github.com/asottile/add-trailing-comma
     rev: v4.0.0
     hooks:
@@ -25,7 +24,6 @@ repos:
       - id: pyupgrade
         args: [--py39-plus]
 
-  # Step 4: Linting
   - repo: https://github.com/PyCQA/flake8
     rev: 7.3.0
     hooks:
@@ -47,7 +45,6 @@ repos:
     hooks:
       - id: check-print-statements
 
-  # Step 7: General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -62,13 +59,11 @@ repos:
       - id: debug-statements
       - id: requirements-txt-fixer
 
-  # Step 8: Makefile checks
   - repo: https://github.com/checkmake/checkmake.git
     rev: 0.2.2
     hooks:
       - id: checkmake
 
-  # Step 9: Local hook to run tests with coverage before pushing
   - repo: local
     hooks:
       - id: pytest-cov
