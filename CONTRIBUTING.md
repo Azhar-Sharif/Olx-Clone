@@ -95,7 +95,13 @@ make db-makemigrations-local
 make db-migrate-local
 ```
 
-Got it! Here's how it fits neatly into your README under the Docker Compose workflow:
+* Collect static files (needed after first build):
+
+```bash
+make collectstatic-local
+
+docker compose -f docker/docker-compose.local.yml exec web python manage.py collectstatic --noinput
+```
 
 ---
 

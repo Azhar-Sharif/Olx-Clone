@@ -5,12 +5,12 @@ COMPOSE_PROD  := docker/docker-compose.production.yml
 	docker-local-build docker-local-up docker-local-down \
 	db-migrate-local db-makemigrations-local seed-all-local test-local \
 	docker-prod-build docker-prod-up docker-prod-down \
-	db-migrate-prod db-makemigrations-prod test-prod
+	db-migrate-prod db-makemigrations-prod test-prod collectstatic-local
 
 help:
 	@echo "Usage: make <target>"
 	@echo "Common: docker-local-up, docker-local-down, docker-local-build"
-	@echo "DB: db-makemigrations-local, db-migrate-local"
+	@echo "DB: db-makemigrations-local, db-migrate-local, collectstatic-local"
 	@echo "Tests: test-local, test-prod"
 	@echo "See README.md for full docs"
 
@@ -29,6 +29,9 @@ db-migrate-local:
 
 db-makemigrations-local:
 	docker compose -f $(COMPOSE_LOCAL) exec -T web python manage.py makemigrations
+
+collectstatic-local:
+	docker compose -f $(COMPOSE_LOCAL) exec -T web python manage.py collectstatic --noinput
 
 seed-all-local:
 	docker compose -f $(COMPOSE_LOCAL) exec -T web python manage.py seed_mock_data all --number 5
