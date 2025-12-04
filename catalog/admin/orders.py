@@ -1,4 +1,7 @@
+from decimal import Decimal
+
 from django.contrib import admin
+from django.utils.html import format_html, format_html_join
 
 from catalog.models.orders import Order
 
@@ -21,12 +24,26 @@ class OrderAdmin(admin.ModelAdmin):
     def products_display(self, obj):
         if not getattr(obj, "products", None):
             return "(no products)"
-        lines = []
-        for it in obj.products:
-            pid = it.get("product_id")
-            qty = it.get("quantity")
-            price = it.get("unit_price")
-            lines.append(f"Product ID: {pid} | Qty: {qty} | Price: {price}")
-        return "\n".join(lines)
+
+        def _item_tuple(item):
+            pid = item.get("product_id")
+            qty = item.get("quantity")
+            try:
+                price = Decimal(item.get("unit_price"))
+            except Exception:
+                price = item.get("unit_price")
+            price_str = (
+                f"{price:.2f}" if isinstance(price, Decimal) else str(price)
+            )
+            return (pid, qty, price_str)
+
+        return format_html(
+            "<ul>{}</ul>",
+            format_html_join(
+                "",
+                "<li>Product ID: {} | Qty: {} | Price: {}</li>",
+                (_item_tuple(it) for it in obj.products),
+            ),
+        )
 
     products_display.short_description = "Products"
