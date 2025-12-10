@@ -31,6 +31,16 @@ INSTALLED_APPS = [
     "catalog",
     "utils",
 ]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = os.getenv(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:3000,http://localhost:8000,http://127.0.0.1:3000",
+).split(",")
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    "CSRF_TRUSTED_ORIGINS",
+    "http://localhost:3000,http://localhost:8000,http://127.0.0.1:3000",
+).split(",")
+
 
 MIDDLEWARE = [
     "middlewares.request_id.RequestIdMiddleware",
