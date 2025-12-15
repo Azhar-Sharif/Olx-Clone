@@ -38,11 +38,11 @@ logger = logging.getLogger(__name__)
     post=register_schema,
 )
 class UserCreateView(generics.CreateAPIView):
-    """Creates a new user account.
+    """Creates a new user account and starts a session.
 
     This endpoint validates the registration payload, creates a user,
-    and returns the serialized user data wrapped in the costume
-    api_response format.
+    logs them in (starts a session), and returns the serialized user
+    data wrapped in the api_response format.
     """
 
     queryset = User.objects.all()
@@ -50,8 +50,7 @@ class UserCreateView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
     def create(self, request, *args, **kwargs):
-        """Creates a user, logs the payload, and wraps the response in
-        costume api_response format."""
+        """Creates a user, logs them in, and wraps the response."""
 
         log_debug(
             "User registration payload",
@@ -64,7 +63,16 @@ class UserCreateView(generics.CreateAPIView):
             },
         )
         response = super().create(request, *args, **kwargs)
-        log_info("User created", extra={"user_id": response.data.get("id")})
+        user_id = response.data.get("id")
+
+        user = User.objects.get(id=user_id)
+        login(request, user)
+
+        log_info(
+            "User created and logged in",
+            extra={"user_id": user_id},
+        )
+
         return api_response(
             True,
             message=SuccessMessages.USER_CREATED.value,
