@@ -34,7 +34,7 @@ collectstatic-local:
 	docker compose -f $(COMPOSE_LOCAL) exec -T web python manage.py collectstatic --noinput
 
 seed-all-local:
-	docker compose -f $(COMPOSE_LOCAL) exec -T web python manage.py seed_mock_data all --number 5
+	docker compose -f $(COMPOSE_LOCAL) exec -T web python manage.py seed_mock_data all --number 15
 
 test-local:
 	docker compose -f $(COMPOSE_LOCAL) run --rm -T web pytest

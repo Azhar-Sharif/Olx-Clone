@@ -1,15 +1,37 @@
 """Utility functions for seeding users, catalog data, and orders.
 
-These helpers create fake data for development and testing using Faker.
+These helpers create fake ecommerce-style data
+for development and testing.
 """
 
 import random
 
+import faker_commerce
 from faker import Faker
 
 from core.utils.logger import log_info
 
 faker = Faker()
+faker.add_provider(faker_commerce.Provider)
+
+
+ECOM_CATEGORY_SEEDS = [
+    "Electronics",
+    "Computers",
+    "Smartphones",
+    "Tablets",
+    "Audio",
+    "TV & Home Theater",
+    "Cameras",
+    "Gaming",
+    "Home Appliances",
+    "Kitchen & Dining",
+    "Books",
+    "Clothing",
+    "Shoes",
+    "Sports & Outdoors",
+    "Beauty & Personal Care",
+]
 
 
 def seed_users(number=10):
@@ -39,8 +61,8 @@ def seed_users(number=10):
 
 
 def seed_catalog(number=10):
-    """Seeds categories, products, and orders
-    if they do not yet exist.
+    """
+    Seeds categories, products, and orders if they do not yet exist.
     """
     from catalog.models import Category, Order, Product
     from users.models import User
@@ -49,28 +71,36 @@ def seed_catalog(number=10):
 
     if not Category.objects.exists():
         log_info("Seeding categories...")
-        categories = ["Electronics", "Books", "Clothing", "Toys", "Sports"]
         Category.objects.bulk_create(
-            [Category(category_name=c) for c in categories],
+            [Category(category_name=name) for name in ECOM_CATEGORY_SEEDS],
         )
         log_info("Categories seeded!")
     else:
         log_info("Skipping category seeding: records already exist.")
+
     categories = list(Category.objects.all())
     users = list(User.objects.filter(role="USER"))
 
     if not Product.objects.exists():
-        log_info(f"Seeding {number} products...")
+        log_info(f"Seeding {number} ecommerce products...")
 
         products = []
         for _ in range(number):
+            category = random.choice(categories) if categories else None
+
+            name = faker.ecommerce_name()
+            description = faker.paragraph(
+                nb_sentences=3,
+            )
+            price = round(random.uniform(500, 500000) / 100, 2)
+
             products.append(
                 Product(
-                    product_name=faker.unique.word().capitalize(),
-                    description=faker.text(),
-                    price=faker.random_int(min=100, max=9999) / 100,
-                    quantity=faker.random_int(min=1, max=50),
-                    category=random.choice(categories),
+                    product_name=name,
+                    description=description,
+                    price=price,
+                    quantity=faker.random_int(min=1, max=100),
+                    category=category,
                     user=random.choice(users) if users else None,
                 ),
             )
@@ -87,7 +117,10 @@ def seed_catalog(number=10):
 
         orders = []
         for _ in range(number):
-            selected_products = random.sample(products, min(3, len(products)))
+            selected_products = random.sample(
+                products,
+                min(3, len(products)),
+            )
 
             product_list = [
                 {
@@ -103,7 +136,9 @@ def seed_catalog(number=10):
                 products=product_list,
                 total_amount=0,
                 shipping_address=faker.address(),
-                order_status=random.choice(["pending", "paid", "shipped"]),
+                order_status=random.choice(
+                    ["pending", "paid", "shipped", "delivered", "cancelled"],
+                ),
             )
             orders.append(order)
 
