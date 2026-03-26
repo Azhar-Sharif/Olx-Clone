@@ -1,23 +1,74 @@
+exclude: '^(.*/)?(migrations|staticfiles|static|media|mediafiles|logs|__pycache__|\.venv|venv|env)/.*|manage\.py$'
+
 repos:
-  - repo: https://github.com/psf/black
-    rev: 24.8.0
-    hooks:
-      - id: black
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 7.0.0
     hooks:
       - id: isort
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
+
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 25.11.0
+    hooks:
+      - id: black
+
+
+  - repo: https://github.com/asottile/add-trailing-comma
+    rev: v4.0.0
+    hooks:
+      - id: add-trailing-comma
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.21.2
+    hooks:
+      - id: pyupgrade
+        args: [--py39-plus]
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.3.0
     hooks:
       - id: flake8
+        additional_dependencies:
+          [flake8-bugbear, flake8-comprehensions, flake8-builtins]
 
-  # Local hook to run tests with coverage before pushing
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-check-blanket-noqa
+      - id: python-no-log-warn
+      - id: python-no-eval
+      - id: python-check-mock-methods
+      - id: text-unicode-replacement-char
+
+  - repo: https://github.com/elParaguayo/check_print
+    rev: v0.1.0
+    hooks:
+      - id: check-print-statements
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ["--maxkb=5000"]
+      - id: check-ast
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: debug-statements
+      - id: requirements-txt-fixer
+
+  - repo: https://github.com/checkmake/checkmake.git
+    rev: 0.2.2
+    hooks:
+      - id: checkmake
+
   - repo: local
     hooks:
       - id: pytest-cov
-        name: Run pytest with coverage ≥60%
-        entry: pytest  --cov=catalog/models  --cov=user/models --cov-report=term-missing --cov-fail-under=60
+        name: Run pytest with coverage ≥60% inside Docker
+        entry: make test-local
         language: system
         pass_filenames: false
         stages: [pre-push]

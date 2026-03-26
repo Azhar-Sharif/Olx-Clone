@@ -16,9 +16,12 @@ class ProductFactory(factory.django.DjangoModelFactory):
     price = factory.LazyFunction(
         lambda: Decimal(
             factory.Faker(
-                "pydecimal", left_digits=3, right_digits=2, positive=True
-            ).generate({})
-        )
+                "pydecimal",
+                left_digits=3,
+                right_digits=2,
+                positive=True,
+            ).generate({}),
+        ),
     )
     product_img = None
     user = None

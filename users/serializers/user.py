@@ -1,11 +1,22 @@
+"""User serializers.
+
+Provides serializers for user authentication, registration, and profile
+updates.
+"""
+
 from rest_framework import serializers
 
 from users.models import User
 
 
 class LoginSerializer(serializers.Serializer):
+    """Validates login credentials for the user authentication
+    endpoint."""
+
     username = serializers.CharField(
-        max_length=150, required=True, help_text="Enter your username"
+        max_length=150,
+        required=True,
+        help_text="Enter your username",
     )
     password = serializers.CharField(
         write_only=True,
@@ -15,19 +26,21 @@ class LoginSerializer(serializers.Serializer):
     )
 
     def validate(self, attrs):
-        """Validate credentials"""
+        """Validates that username and password are present."""
         username = attrs.get("username")
         password = attrs.get("password")
 
         if not username or not password:
             raise serializers.ValidationError(
-                "Username and password are required"
+                "Username and password are required",
             )
 
         return attrs
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Serializes user data for registration and read operations."""
+
     password = serializers.CharField(
         write_only=True,
         required=True,
@@ -52,11 +65,13 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "role"]
 
     def create(self, validated_data):
-        """Create a new user with encrypted password"""
+        """Creates a new user with encrypted password."""
         return User.objects.create_user(**validated_data)
 
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    """Serializes user data for profile update operations."""
+
     password = serializers.CharField(
         write_only=True,
         required=False,
@@ -81,7 +96,8 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "username", "role"]
 
     def update(self, instance, validated_data):
-        """Update user, properly hashing the password if it's provided."""
+        """Updates user, properly hashing the password if it's
+        provided."""
         password = validated_data.pop("password", None)
         user = super().update(instance, validated_data)
 

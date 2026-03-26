@@ -1,33 +1,22 @@
 [flake8]
-
-ignore = E501, W503, E203
-
-
+max-line-length = 79
+max-doc-length = 72
+extend-ignore = E203,W503
 exclude =
     .git,
-    .github,
     __pycache__,
-    **/migrations/**,
-    env,
+    */migrations/*,
+    manage.py,
     venv,
+    env,
     .venv,
-    __init__.py
+    */staticfiles/*,
+    */static/*,
+    */media/*,
+    */mediafiles/*,
+    */logs/*,
     build,
     dist,
-    .pytest_cache,
     *.egg-info
-
-
-filename = *.py
-
-
-show-source = true
-
-
-max-complexity = 10
-
-
-statistics = true
-
-
-max-line-length = 79
+per-file-ignores =
+    __init__.py:F401

@@ -2,6 +2,8 @@
 __pycache__/
 db.sqlite3
 .env
+.env.*
+!.env.example
 staticfiles/
 media/
 .vscode/
@@ -11,7 +13,6 @@ htmlcov/
 .pytest_cache/
 .cache/
 
-# Log files
 logs/
 *.log
 *.log.*

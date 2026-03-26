@@ -1,3 +1,8 @@
+"""Order serializers.
+
+Provides serialization and creation logic for orders and their products.
+"""
+
 from django.db import transaction
 from django.db.models import F
 from rest_framework import serializers
@@ -6,16 +11,27 @@ from catalog.models import Order, Product
 
 
 class OrderProductInputSerializer(serializers.Serializer):
+    """Validates product items included in an order request."""
+
     product_id = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all()
+        queryset=Product.objects.all(),
     )
     quantity = serializers.IntegerField(min_value=1)
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    """Serializes order data and handle order creation with inventory
+    updates.
+    """
+
     user = serializers.ReadOnlyField(source="user.username")
     products = serializers.JSONField(read_only=True)
-    products_data = OrderProductInputSerializer(many=True, write_only=True)
+    products_data = OrderProductInputSerializer(
+        many=True,
+        write_only=True,
+        required=False,
+        help_text="List of products with quantity",
+    )
 
     class Meta:
         model = Order
@@ -39,6 +55,9 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        """Creates an order, validate stock, and update product
+        quantities.
+        """
         products_data = validated_data.pop("products_data")
         user = self.context["request"].user
 
@@ -52,8 +71,9 @@ class OrderSerializer(serializers.ModelSerializer):
                 if product.quantity < quantity:
                     raise serializers.ValidationError(
                         {
-                            f"Inventory check failed: The quantity requested for product {product.id} is not available."
-                        }
+                            f"Inventory check failed: The quantity requested "
+                            f"for product {product.id} is not available.",
+                        },
                     )
 
                 products_list.append(
@@ -62,11 +82,11 @@ class OrderSerializer(serializers.ModelSerializer):
                         "product_name": product.product_name,
                         "quantity": quantity,
                         "unit_price": str(product.price),
-                    }
+                    },
                 )
 
                 Product.objects.filter(pk=product.pk).update(
-                    quantity=F("quantity") - quantity
+                    quantity=F("quantity") - quantity,
                 )
 
             order = Order.objects.create(
@@ -77,3 +97,26 @@ class OrderSerializer(serializers.ModelSerializer):
             order.recompute_total()
 
         return order
+
+
+def validate_products_data(self, value):
+    """Block changing products_data after order is created."""
+    if self.instance is not None:
+        raise serializers.ValidationError(
+            "products_data cannot be changed once the order is created.",
+        )
+    return value
+
+
+def validate(self, attrs):
+    """
+    On create: require products_data.
+    On update: do NOT require products_data (only shipping_address).
+    """
+
+    if self.instance is None and "products_data" not in attrs:
+        raise serializers.ValidationError(
+            {"products_data": ["This field is required."]},
+        )
+
+    return super().validate(attrs)

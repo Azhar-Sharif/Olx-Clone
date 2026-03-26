@@ -25,7 +25,9 @@ class Order(models.Model):
     products = models.JSONField(default=list)
 
     total_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=Decimal("0.00")
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
     )
     shipping_address = models.TextField()
     order_status = models.CharField(
@@ -42,7 +44,12 @@ class Order(models.Model):
         return f"Order #{self.pk} by {self.user_id} [{self.order_status}]"
 
     def add_product(self, product_id, quantity, unit_price):
-        """Add or update a product in the order"""
+        """Adds a product to the order or increase its quantity.
+
+        Update the in-memory products list and recompute the total
+        amount without saving the model instance.
+        """
+
         for item in self.products:
             if item["product_id"] == product_id:
                 item["quantity"] += quantity
@@ -53,12 +60,18 @@ class Order(models.Model):
                     "product_id": product_id,
                     "quantity": quantity,
                     "unit_price": str(unit_price),
-                }
+                },
             )
         self.recompute_total(save=False)
 
     def recompute_total(self, save=True):
-        """Calculate the total price based on products list"""
+        """Recalculate and optionally persist the order total.
+
+        The total is computed from the products list as the sum of
+        unit_price × quantity for each item. When save is True, the
+        updated total_amount is written to the database.
+        """
+
         total = sum(
             Decimal(item["unit_price"]) * item["quantity"]
             for item in self.products
